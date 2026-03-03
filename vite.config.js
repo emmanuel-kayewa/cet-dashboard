@@ -22,6 +22,9 @@ export default defineConfig({
             '@': '/resources/js',
         },
     },
+    optimizeDeps: {
+        include: ['highcharts', 'highcharts/highcharts-3d'],
+    },
     // server: {
     //     cors: true,
     //     hmr: {
