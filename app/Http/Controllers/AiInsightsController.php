@@ -102,7 +102,16 @@ class AiInsightsController extends Controller
 
         // Synchronous fallback — extend PHP time limit
         set_time_limit(0);
-        $insights = $aiService->generateExecutiveInsights($fresh);
+
+        try {
+            $insights = $aiService->generateExecutiveInsights($fresh);
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json([
+                'success' => false,
+                'message' => 'AI analysis failed: ' . $e->getMessage(),
+            ], 500);
+        }
 
         return response()->json([
             'success' => !empty($insights),
@@ -129,7 +138,16 @@ class AiInsightsController extends Controller
         }
 
         set_time_limit(0);
-        $explanation = $aiService->explainAnomaly($request->kpi_id, $request->directorate_id);
+
+        try {
+            $explanation = $aiService->explainAnomaly($request->kpi_id, $request->directorate_id);
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json([
+                'success' => false,
+                'message' => 'AI analysis failed: ' . $e->getMessage(),
+            ], 500);
+        }
 
         return response()->json([
             'success' => !empty($explanation),
@@ -155,7 +173,16 @@ class AiInsightsController extends Controller
         }
 
         set_time_limit(0);
-        $recommendations = $aiService->suggestActions($request->directorate_id);
+
+        try {
+            $recommendations = $aiService->suggestActions($request->directorate_id);
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json([
+                'success' => false,
+                'message' => 'AI analysis failed: ' . $e->getMessage(),
+            ], 500);
+        }
 
         return response()->json([
             'success' => !empty($recommendations),
@@ -181,7 +208,16 @@ class AiInsightsController extends Controller
         }
 
         set_time_limit(0);
-        $answer = $aiService->answerQuery($request->question);
+
+        try {
+            $answer = $aiService->answerQuery($request->question);
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json([
+                'success' => false,
+                'message' => 'AI analysis failed: ' . $e->getMessage(),
+            ], 500);
+        }
 
         return response()->json([
             'success' => !empty($answer),
@@ -208,7 +244,16 @@ class AiInsightsController extends Controller
         }
 
         set_time_limit(0);
-        $prediction = $aiService->predictDeadlineBreach($request->kpi_id, $request->directorate_id);
+
+        try {
+            $prediction = $aiService->predictDeadlineBreach($request->kpi_id, $request->directorate_id);
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json([
+                'success' => false,
+                'message' => 'AI analysis failed: ' . $e->getMessage(),
+            ], 500);
+        }
 
         return response()->json([
             'success' => !empty($prediction),
