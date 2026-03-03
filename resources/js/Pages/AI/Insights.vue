@@ -218,10 +218,18 @@ async function pollTask(taskId, intervalMs = 3000, maxPollMs = 900000) {
         await new Promise(r => setTimeout(r, intervalMs));
 
         const resp = await fetch(`/api/ai/task/${taskId}`, {
-            headers: { 'X-CSRF-TOKEN': csrfToken() },
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken(),
+            },
         });
 
-        if (!resp.ok) throw new Error('Polling failed');
+        if (!resp.ok) {
+            const text = await resp.text();
+            let message = `Polling failed (HTTP ${resp.status})`;
+            try { message = JSON.parse(text).message || message; } catch {}
+            throw new Error(message);
+        }
 
         const data = await resp.json();
 
@@ -240,11 +248,32 @@ async function pollTask(taskId, intervalMs = 3000, maxPollMs = 900000) {
 async function aiPost(url, body = {}) {
     const resp = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken() },
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken(),
+        },
         body: JSON.stringify(body),
     });
 
-    const data = await resp.json();
+    // Guard: read as text first so an HTML error page doesn't blow up JSON.parse
+    const text = await resp.text();
+
+    let data;
+    try {
+        data = JSON.parse(text);
+    } catch {
+        console.error('Non-JSON response from', url, ':', text.substring(0, 300));
+        throw new Error(
+            resp.status === 419
+                ? 'Session expired — please refresh the page.'
+                : `Server returned an unexpected response (HTTP ${resp.status}). Please try again.`
+        );
+    }
+
+    if (!resp.ok) {
+        throw new Error(data.message || `Request failed (HTTP ${resp.status})`);
+    }
 
     // Async job — poll for the result
     if (data.async && data.task_id) {
