@@ -30,6 +30,8 @@ class User extends Authenticatable
         'last_login_ip',
         'is_active',
         'preferences',
+        'whatsapp_phone',
+        'whatsapp_opt_in',
     ];
 
     protected $hidden = [
@@ -43,6 +45,7 @@ class User extends Authenticatable
         'magic_link_expires_at' => 'datetime',
         'is_active' => 'boolean',
         'preferences' => 'array',
+        'whatsapp_opt_in' => 'boolean',
     ];
 
     // ── Relationships ──────────────────────────────────────
