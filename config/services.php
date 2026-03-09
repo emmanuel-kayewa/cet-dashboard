@@ -42,4 +42,24 @@ return [
         'tenant' => env('AZURE_AD_TENANT_ID', 'common'),
     ],
 
+    'whatsapp' => [
+        // WhatsApp Business Platform (Cloud API)
+        // https://developers.facebook.com/docs/whatsapp/cloud-api/
+        'token' => env('WHATSAPP_CLOUD_API_TOKEN'),
+        'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
+        'business_account_id' => env('WHATSAPP_BUSINESS_ACCOUNT_ID'),
+        'api_version' => env('WHATSAPP_API_VERSION', 'v21.0'),
+        'templates' => [
+            'alert' => env('WHATSAPP_TEMPLATE_ALERT'),
+            'weekly_digest' => env('WHATSAPP_TEMPLATE_WEEKLY_DIGEST'),
+        ],
+        'url_button' => [
+            // Only enable if your approved templates include a URL button.
+            'enabled' => env('WHATSAPP_URL_BUTTON_ENABLED', false),
+            'index' => (int) env('WHATSAPP_URL_BUTTON_INDEX', 0),
+            // For URL buttons, WhatsApp typically expects the dynamic URL suffix (path/query), not the full domain.
+            'parameter' => env('WHATSAPP_URL_BUTTON_PARAMETER', '/dashboard'),
+        ],
+    ],
+
 ];

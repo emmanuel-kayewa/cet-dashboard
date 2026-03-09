@@ -49,6 +49,7 @@ return [
         'kpi_drop_threshold' => 10, // percentage drop to trigger alert
         'risk_threshold' => 7, // risk score (1-10) to trigger alert
         'email_notifications' => true,
+        'whatsapp_notifications' => env('DASHBOARD_WHATSAPP_NOTIFICATIONS', false),
     ],
 
     /*
