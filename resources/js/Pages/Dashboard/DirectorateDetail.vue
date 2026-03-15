@@ -2,17 +2,13 @@
     <AppLayout :directorates="directorates">
         <template #title>{{ directorate.name }}</template>
 
-        <!-- Breadcrumb -->
-        <nav class="text-sm mb-6 no-print">
-            <ol class="flex items-center gap-2 text-gray-500 dark:text-gray-400">
-                <li><Link href="/dashboard" class="hover:text-zesco-600">Dashboard</Link></li>
-                <li>/</li>
-                <li class="font-medium text-gray-900 dark:text-white">{{ directorate.code }}</li>
-            </ol>
-        </nav>
+        <Breadcrumb :items="[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: directorate.code, current: true }
+        ]" />
 
         <!-- Directorate Header -->
-        <div class="mb-6 p-4 rounded-xl bg-gradient-to-r from-zesco-50 to-blue-50 dark:from-gray-800 dark:to-gray-800 border border-zesco-100 dark:border-gray-700">
+        <div class="mb-6 p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
             <div class="flex flex-col sm:flex-row sm:items-center gap-4">
                 <div class="flex items-center gap-4 min-w-0">
                     <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg flex-shrink-0"
@@ -25,28 +21,48 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-6 text-center sm:ml-auto flex-shrink-0">
-                    <div>
-                        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ kpiSummary.total || 0 }}</p>
-                        <p class="text-xs text-gray-500">KPIs</p>
-                    </div>
-                    <div>
-                        <p class="text-2xl font-bold" :class="kpiSummary.completion_percentage >= 75 ? 'text-green-600' : 'text-amber-600'">
-                            {{ kpiSummary.completion_percentage || 0 }}%
-                        </p>
-                        <p class="text-xs text-gray-500">Completion</p>
-                    </div>
-                    <div>
-                        <p class="text-2xl font-bold" :class="kpiSummary.high_risk > 2 ? 'text-red-600' : 'text-gray-900 dark:text-white'">
-                            {{ kpiSummary.high_risk || 0 }}
-                        </p>
-                        <p class="text-xs text-gray-500">High Risks</p>
-                    </div>
+                    <!-- PP uses portfolio stats from pp_* tables -->
+                    <template v-if="directorate.code === 'PP' && ppPortfolio">
+                        <div>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ ppPortfolio.boardSummary.totalProjects }}</p>
+                            <p class="text-xs text-gray-500">Projects</p>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold text-blue-600">${{ fmtM(ppPortfolio.boardSummary.totalCommitted) }}</p>
+                            <p class="text-xs text-gray-500">Committed</p>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold" :class="ppPortfolio.boardSummary.spendPct >= 50 ? 'text-green-600' : 'text-amber-600'">
+                                {{ ppPortfolio.boardSummary.spendPct }}%
+                            </p>
+                            <p class="text-xs text-gray-500">Spend</p>
+                        </div>
+                    </template>
+                    <!-- Other directorates use generic KPI stats -->
+                    <template v-else>
+                        <div>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ kpiSummary.total || 0 }}</p>
+                            <p class="text-xs text-gray-500">KPIs</p>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold" :class="kpiSummary.completion_percentage >= 75 ? 'text-green-600' : 'text-amber-600'">
+                                {{ kpiSummary.completion_percentage || 0 }}%
+                            </p>
+                            <p class="text-xs text-gray-500">Completion</p>
+                        </div>
+                        <div>
+                            <p class="text-2xl font-bold" :class="kpiSummary.high_risk > 2 ? 'text-red-600' : 'text-gray-900 dark:text-white'">
+                                {{ kpiSummary.high_risk || 0 }}
+                            </p>
+                            <p class="text-xs text-gray-500">High Risks</p>
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>
 
-        <!-- Filters -->
-        <div class="flex flex-wrap items-end gap-4 mb-6 no-print">
+        <!-- Filters (generic directorates only) -->
+        <div v-if="directorate.code !== 'PP'" class="flex flex-wrap items-end gap-4 mb-6 no-print">
             <DateRangePicker
                 v-model:from="filters.from"
                 v-model:to="filters.to"
@@ -66,8 +82,28 @@
             </div>
         </div>
 
+        <!-- ══════════════════════════════════════════════════════════
+             PP PORTFOLIO DASHBOARD — Redirects to dedicated drill-down pages
+             ══════════════════════════════════════════════════════════ -->
+        <template v-if="directorate.code === 'PP'">
+            <div class="text-center py-16">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-zesco-100 dark:bg-zesco-900/30 flex items-center justify-center">
+                    <svg class="w-8 h-8 text-zesco-600 dark:text-zesco-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">PP Portfolio Dashboard</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                    The Planning &amp; Projects portfolio now has a dedicated drill-down dashboard with interactive charts and project explorer.
+                </p>
+                <Link href="/pp/dashboard" class="btn-primary text-sm px-6 py-2.5">
+                    Go to PP Dashboard
+                </Link>
+            </div>
+        </template>
+
         <!-- KPI Cards Row -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <!-- <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <KpiCard
                 v-for="kpi in topKpis"
                 :key="kpi.id"
@@ -76,10 +112,10 @@
                 :change="kpi.change"
                 :status="kpi.status"
             />
-        </div>
+        </div> -->
 
-        <!-- KPI Trend & Financial Overview -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-start">
+        <!-- KPI Trend & Financial Overview (hidden for PP — uses pp_* tables instead) -->
+        <div v-if="directorate.code !== 'PP'" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-start">
             <Card title="KPI Trend">
                 <div class="mb-3">
                     <Select
@@ -150,8 +186,8 @@
             </Card>
         </div>
 
-        <!-- Projects & Risks -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-start">
+        <!-- Projects & Risks (hidden for PP — uses pp_* tables instead) -->
+        <div v-if="directorate.code !== 'PP'" class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 items-start">
             <Card title="Projects">
                 <template #actions>
                     <div v-if="projects.length > perPage" class="flex items-center gap-2">
@@ -168,15 +204,7 @@
                     <div v-for="project in pagedProjects" :key="project.id" class="p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
                         <div class="flex items-center justify-between mb-1">
                             <span class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ project.name }}</span>
-                            <span class="text-xs px-2 py-0.5 rounded-full"
-                                  :class="{
-                                      'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400': project.status === 'on_track',
-                                      'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400': project.status === 'at_risk',
-                                      'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400': project.status === 'delayed',
-                                      'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400': project.status === 'completed',
-                                  }">
-                                {{ project.status?.replace('_', ' ') }}
-                            </span>
+                            <Badge variant="dot" :color="getProjectStatusColor(project.status)" :label="project.status?.replace('_', ' ')" />
                         </div>
                         <div class="mt-2">
                             <div class="flex items-center justify-between text-xs text-gray-500 mb-1">
@@ -208,15 +236,7 @@
                     <div v-for="risk in pagedRisks" :key="risk.id" class="p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
                         <div class="flex items-center justify-between mb-1">
                             <span class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ risk.title }}</span>
-                            <span class="text-xs px-2 py-0.5 rounded-full font-medium"
-                                  :class="{
-                                      'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400': risk.risk_level === 'critical',
-                                      'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400': risk.risk_level === 'high',
-                                      'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400': risk.risk_level === 'medium',
-                                      'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400': risk.risk_level === 'low',
-                                  }">
-                                {{ risk.risk_level }}
-                            </span>
+                            <Badge variant="dot" :color="getRiskLevelColor(risk.risk_level)" :label="risk.risk_level" />
                         </div>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{{ risk.description }}</p>
                         <div class="flex items-center gap-3 mt-2 text-xs text-gray-400">
@@ -229,190 +249,24 @@
                 </div>
             </Card>
         </div>
-
-        <!-- Wayleaves & Surveys — Only for Planning and Projects Directorate -->
-        <template v-if="directorate.code === 'PP'">
-            <!-- Wayleaves Summary Cards -->
-            <div class="mb-4">
-                <h3 class="text-base font-semibold text-gray-900 dark:text-white mb-3">Wayleaves & Surveys</h3>
-            </div>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-                <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4">
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Wayleave Received</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ wayleaveStats.totalReceived }}</p>
-                </div>
-                <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4">
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Wayleave Cleared</p>
-                    <p class="text-2xl font-bold text-green-600">{{ wayleaveStats.totalCleared }}</p>
-                </div>
-                <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4">
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Survey Received</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ surveyStats.totalReceived }}</p>
-                </div>
-                <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 p-4">
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Survey Cleared</p>
-                    <p class="text-2xl font-bold text-green-600">{{ surveyStats.totalCleared }}</p>
-                </div>
-            </div>
-
-            <!-- Wayleave Charts Row: Bar + 3D Pie -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <Card title="Wayleave Aspects — Received vs Cleared vs Pending">
-                    <BarChart
-                        :data="wayleaveBarData"
-                        xField="label"
-                        :multiSeries="wayleaveMultiSeries"
-                        height="360px"
-                    />
-                </Card>
-                <Card title="Wayleave Jobs Received">
-                    <Pie3DChart
-                        :data="wayleavePie3D"
-                        height="400px"
-                    />
-                </Card>
-            </div>
-
-            <!-- Wayleave Horizontal Bar + Clearance Gauge -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <Card title="Wayleave — Pending by Aspect">
-                    <BarChart
-                        :data="wayleavePendingData"
-                        xField="label"
-                        yField="value"
-                        seriesName="Pending"
-                        :colors="['#f59e0b', '#d97706', '#b45309', '#92400e', '#78350f', '#451a03']"
-                        height="320px"
-                        horizontal
-                    />
-                </Card>
-                <Card title="Wayleave Clearance Rate">
-                    <BaseChart :option="wayleaveClearanceGaugeOption" height="320px" />
-                </Card>
-            </div>
-
-            <!-- Survey Charts Row: Bar + 3D Pie -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <Card title="Survey Aspects — Received vs Cleared vs Pending">
-                    <BarChart
-                        :data="surveyBarData"
-                        xField="label"
-                        :multiSeries="surveyMultiSeries"
-                        height="360px"
-                    />
-                </Card>
-                <Card title="Survey Jobs Received">
-                    <Pie3DChart
-                        :data="surveyPie3D"
-                        height="400px"
-                    />
-                </Card>
-            </div>
-
-            <!-- Survey Horizontal Bar + Clearance Gauge -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <Card title="Survey — Pending by Aspect">
-                    <BarChart
-                        :data="surveyPendingData"
-                        xField="label"
-                        yField="value"
-                        seriesName="Pending"
-                        :colors="['#8b5cf6', '#7c3aed', '#6d28d9', '#5b21b6']"
-                        height="320px"
-                        horizontal
-                    />
-                </Card>
-                <Card title="Survey Clearance Rate">
-                    <BaseChart :option="surveyClearanceGaugeOption" height="320px" />
-                </Card>
-            </div>
-
-            <!-- Data Tables -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <Card title="Wayleave Data Table" noPadding>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead class="bg-gray-50 dark:bg-gray-700/50">
-                                <tr>
-                                    <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">S/N</th>
-                                    <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Aspect</th>
-                                    <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Received</th>
-                                    <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Cleared</th>
-                                    <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Pending</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                                <tr v-for="(row, i) in wayleaveRawData" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                                    <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ i + 1 }}</td>
-                                    <td class="px-4 py-3 text-gray-900 dark:text-white font-medium">{{ row.aspect }}</td>
-                                    <td class="px-4 py-3 text-right text-gray-900 dark:text-white">{{ row.received }}</td>
-                                    <td class="px-4 py-3 text-right text-green-600 dark:text-green-400 font-semibold">{{ row.cleared }}</td>
-                                    <td class="px-4 py-3 text-right text-amber-600 dark:text-amber-400 font-semibold">{{ row.pending }}</td>
-                                </tr>
-                                <tr class="bg-gray-50 dark:bg-gray-700/50 font-bold">
-                                    <td class="px-4 py-3"></td>
-                                    <td class="px-4 py-3 text-gray-900 dark:text-white">TOTAL</td>
-                                    <td class="px-4 py-3 text-right text-gray-900 dark:text-white">{{ wayleaveStats.totalReceived }}</td>
-                                    <td class="px-4 py-3 text-right text-green-600 dark:text-green-400">{{ wayleaveStats.totalCleared }}</td>
-                                    <td class="px-4 py-3 text-right text-amber-600 dark:text-amber-400">{{ wayleaveStats.totalPending }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </Card>
-
-                <Card title="Survey Data Table" noPadding>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead class="bg-gray-50 dark:bg-gray-700/50">
-                                <tr>
-                                    <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">S/N</th>
-                                    <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Aspect</th>
-                                    <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Received</th>
-                                    <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Cleared</th>
-                                    <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Pending</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                                <tr v-for="(row, i) in surveyRawData" :key="i" class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
-                                    <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ i + 1 }}</td>
-                                    <td class="px-4 py-3 text-gray-900 dark:text-white font-medium">{{ row.aspect }}</td>
-                                    <td class="px-4 py-3 text-right text-gray-900 dark:text-white">{{ row.received }}</td>
-                                    <td class="px-4 py-3 text-right text-green-600 dark:text-green-400 font-semibold">{{ row.cleared }}</td>
-                                    <td class="px-4 py-3 text-right text-amber-600 dark:text-amber-400 font-semibold">{{ row.pending }}</td>
-                                </tr>
-                                <tr class="bg-gray-50 dark:bg-gray-700/50 font-bold">
-                                    <td class="px-4 py-3"></td>
-                                    <td class="px-4 py-3 text-gray-900 dark:text-white">TOTAL</td>
-                                    <td class="px-4 py-3 text-right text-gray-900 dark:text-white">{{ surveyStats.totalReceived }}</td>
-                                    <td class="px-4 py-3 text-right text-green-600 dark:text-green-400">{{ surveyStats.totalCleared }}</td>
-                                    <td class="px-4 py-3 text-right text-amber-600 dark:text-amber-400">{{ surveyStats.totalPending }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </Card>
-            </div>
-        </template>
-
     </AppLayout>
 </template>
 
 <script setup>
-import { ref, computed, defineAsyncComponent } from 'vue';
+import { ref, computed } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Components/Layout/AppLayout.vue';
+import Breadcrumb from '@/Components/UI/Breadcrumb.vue';
 import KpiCard from '@/Components/Dashboard/KpiCard.vue';
 import Card from '@/Components/UI/Card.vue';
 import Select from '@/Components/UI/Select.vue';
+import Badge from '@/Components/UI/Badge.vue';
 import DateRangePicker from '@/Components/UI/DateRangePicker.vue';
 import LineChart from '@/Components/Charts/LineChart.vue';
-import BarChart from '@/Components/Charts/BarChart.vue';
-import BaseChart from '@/Components/Charts/BaseChart.vue';
 import { formatCurrency } from '@/Composables/useFormatters';
+import { useBadges } from '@/Composables/useBadges';
 
-// Lazy-load 3D pie (Highcharts) only when needed
-const Pie3DChart = defineAsyncComponent(() => import('@/Components/Charts/Pie3DChart.vue'));
+const { getProjectStatusColor, getRiskLevelColor } = useBadges();
 
 const props = defineProps({
     directorate: { type: Object, required: true },
@@ -424,6 +278,7 @@ const props = defineProps({
     risks: { type: Array, default: () => [] },
     trend: { type: Object, default: () => ({ data: [], forecast: [] }) },
     filters: { type: Object, default: () => ({ from: '', to: '' }) },
+    ppPortfolio: { type: Object, default: () => null },
 });
 
 const filters = ref({ ...props.filters });
@@ -491,168 +346,13 @@ function clearFilters() {
     router.get(`/dashboard/directorate/${props.directorate.slug}`);
 }
 
-// ── Wayleaves & Surveys (PP directorate only) ──────────────
-const wayleaveRawData = [
-    { aspect: 'Line route planning and wayleave acquisition', received: 16, cleared: 8, pending: 8 },
-    { aspect: 'Encroachments on distribution and medium voltage lines', received: 12, cleared: 4, pending: 8 },
-    { aspect: 'Wayleave clearance for development of fuel service stations', received: 13, cleared: 6, pending: 7 },
-    { aspect: 'Wayleave inspections', received: 14, cleared: 8, pending: 6 },
-    { aspect: 'Re-routing', received: 30, cleared: 18, pending: 12 },
-    { aspect: 'Land acquisition', received: 2, cleared: 2, pending: 0 },
-];
-
-const surveyRawData = [
-    { aspect: 'Cadastral survey works', received: 18, cleared: 15, pending: 3 },
-    { aspect: 'Engineering survey works', received: 3, cleared: 1, pending: 2 },
-    { aspect: 'Transmission Detailed Survey Works', received: 6, cleared: 3, pending: 3 },
-    { aspect: 'Distribution Detailed Survey Works', received: 6, cleared: 5, pending: 1 },
-];
-
-const wayleaveStats = computed(() => {
-    const totalReceived = wayleaveRawData.reduce((s, r) => s + r.received, 0);
-    const totalCleared = wayleaveRawData.reduce((s, r) => s + r.cleared, 0);
-    return { totalReceived, totalCleared, totalPending: totalReceived - totalCleared };
-});
-
-const surveyStats = computed(() => {
-    const totalReceived = surveyRawData.reduce((s, r) => s + r.received, 0);
-    const totalCleared = surveyRawData.reduce((s, r) => s + r.cleared, 0);
-    return { totalReceived, totalCleared, totalPending: totalReceived - totalCleared };
-});
-
-// Bar chart data — Received vs Cleared vs Pending
-const wayleaveBarData = computed(() =>
-    wayleaveRawData.map(d => ({
-        label: d.aspect.length > 20 ? d.aspect.substring(0, 18) + '…' : d.aspect,
-        received: d.received,
-        cleared: d.cleared,
-        pending: d.pending,
-    }))
-);
-
-const wayleaveMultiSeries = [
-    { name: 'Received', field: 'received', color: '#3b82f6' },
-    { name: 'Cleared', field: 'cleared', color: '#22c55e' },
-    { name: 'Pending', field: 'pending', color: '#f59e0b' },
-];
-
-const surveyBarData = computed(() =>
-    surveyRawData.map(d => ({
-        label: d.aspect.length > 20 ? d.aspect.substring(0, 18) + '…' : d.aspect,
-        received: d.received,
-        cleared: d.cleared,
-        pending: d.pending,
-    }))
-);
-
-const surveyMultiSeries = [
-    { name: 'Received', field: 'received', color: '#8b5cf6' },
-    { name: 'Cleared', field: 'cleared', color: '#22c55e' },
-    { name: 'Pending', field: 'pending', color: '#ef4444' },
-];
-
-// 3D Pie data — jobs received by aspect
-const wayleavePie3D = computed(() =>
-    wayleaveRawData.map(d => ({
-        name: d.aspect,
-        value: d.received,
-    }))
-);
-
-const surveyPie3D = computed(() =>
-    surveyRawData.map(d => ({
-        name: d.aspect,
-        value: d.received,
-    }))
-);
-
-// Horizontal bar — pending focus
-const wayleavePendingData = computed(() =>
-    wayleaveRawData
-        .filter(d => d.pending > 0)
-        .map(d => ({
-            label: d.aspect.length > 30 ? d.aspect.substring(0, 28) + '…' : d.aspect,
-            value: d.pending,
-        }))
-        .sort((a, b) => b.value - a.value)
-);
-
-const surveyPendingData = computed(() =>
-    surveyRawData
-        .filter(d => d.pending > 0)
-        .map(d => ({
-            label: d.aspect.length > 30 ? d.aspect.substring(0, 28) + '…' : d.aspect,
-            value: d.pending,
-        }))
-        .sort((a, b) => b.value - a.value)
-);
-
-// Gauge — clearance rate
-const wayleaveClearanceGaugeOption = computed(() => ({
-    tooltip: {
-        trigger: 'item',
-        backgroundColor: 'rgba(255,255,255,0.95)',
-        borderColor: '#e2e8f0',
-        textStyle: { color: '#334155', fontSize: 13 },
-        formatter: (params) => `${params.name}: ${params.value}%`,
-    },
-    series: [{
-        type: 'gauge',
-        startAngle: 200,
-        endAngle: -20,
-        center: ['50%', '60%'],
-        radius: '85%',
-        min: 0,
-        max: 100,
-        pointer: { show: false },
-        progress: { show: true, overlap: false, roundCap: true, clip: false, itemStyle: { borderWidth: 1, borderColor: '#fff' } },
-        axisLine: { lineStyle: { width: 30, color: [[1, '#f1f5f9']] } },
-        splitLine: { show: false },
-        axisTick: { show: false },
-        axisLabel: { show: false },
-        title: { fontSize: 11, color: '#64748b', offsetCenter: ['0%', '30%'] },
-        detail: { width: 40, height: 14, fontSize: 14, color: 'inherit', formatter: '{value}%', offsetCenter: ['0%', '0%'] },
-        data: [{
-            value: Math.round((wayleaveStats.value.totalCleared / wayleaveStats.value.totalReceived) * 100),
-            name: 'Overall Clearance',
-            title: { offsetCenter: ['0%', '25%'] },
-            detail: { offsetCenter: ['0%', '5%'] },
-            itemStyle: { color: '#22c55e' },
-        }],
-    }],
-}));
-
-const surveyClearanceGaugeOption = computed(() => ({
-    tooltip: {
-        trigger: 'item',
-        backgroundColor: 'rgba(255,255,255,0.95)',
-        borderColor: '#e2e8f0',
-        textStyle: { color: '#334155', fontSize: 13 },
-        formatter: (params) => `${params.name}: ${params.value}%`,
-    },
-    series: [{
-        type: 'gauge',
-        startAngle: 200,
-        endAngle: -20,
-        center: ['50%', '60%'],
-        radius: '85%',
-        min: 0,
-        max: 100,
-        pointer: { show: false },
-        progress: { show: true, overlap: false, roundCap: true, clip: false, itemStyle: { borderWidth: 1, borderColor: '#fff' } },
-        axisLine: { lineStyle: { width: 30, color: [[1, '#f1f5f9']] } },
-        splitLine: { show: false },
-        axisTick: { show: false },
-        axisLabel: { show: false },
-        title: { fontSize: 11, color: '#64748b', offsetCenter: ['0%', '30%'] },
-        detail: { width: 40, height: 14, fontSize: 14, color: 'inherit', formatter: '{value}%', offsetCenter: ['0%', '0%'] },
-        data: [{
-            value: Math.round((surveyStats.value.totalCleared / surveyStats.value.totalReceived) * 100),
-            name: 'Overall Clearance',
-            title: { offsetCenter: ['0%', '25%'] },
-            detail: { offsetCenter: ['0%', '5%'] },
-            itemStyle: { color: '#22c55e' },
-        }],
-    }],
-}));
+// PP directorate now uses the dedicated drill-down dashboard at /pp/dashboard
+// Keep fmtM for the redirect card summary stats
+function fmtM(val) {
+    const n = Number(val) || 0;
+    if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B';
+    if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+    if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+    return n.toLocaleString();
+}
 </script>
