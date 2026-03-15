@@ -2,13 +2,10 @@
     <AppLayout :directorates="directorates">
         <template #title>Risk Register</template>
 
-        <nav class="text-sm mb-6">
-            <ol class="flex items-center gap-2 text-gray-500 dark:text-gray-400">
-                <li><Link href="/dashboard" class="hover:text-zesco-600">Dashboard</Link></li>
-                <li>/</li>
-                <li class="font-medium text-gray-900 dark:text-white">Risk Entry</li>
-            </ol>
-        </nav>
+        <Breadcrumb :items="[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Risk Entry', current: true }
+        ]" />
 
         <Card title="Risk Register">
             <template #actions>
@@ -36,15 +33,7 @@
                             <td class="py-2 px-3 text-gray-500 text-xs">{{ risk.directorate?.code }}</td>
                             <td class="text-center py-2 px-3 font-bold">{{ risk.impact * risk.likelihood }}</td>
                             <td class="text-center py-2 px-3">
-                                <span class="text-xs px-2 py-0.5 rounded-full font-medium"
-                                      :class="{
-                                          'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400': risk.risk_level === 'critical',
-                                          'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400': risk.risk_level === 'high',
-                                          'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400': risk.risk_level === 'medium',
-                                          'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400': risk.risk_level === 'low',
-                                      }">
-                                    {{ risk.risk_level }}
-                                </span>
+                                <Badge variant="dot" :color="getRiskLevelColor(risk.risk_level)" :label="risk.risk_level" />
                             </td>
                             <td class="py-2 px-3 text-gray-500 capitalize text-xs">{{ risk.category }}</td>
                             <td class="py-2 px-3 text-gray-500 capitalize text-xs">{{ risk.status }}</td>
@@ -113,10 +102,10 @@
                 </div>
 
                 <!-- Risk Score Display -->
-                <div class="p-3 rounded-lg text-center" :class="riskScoreClass">
-                    <p class="text-xs font-medium mb-1">Risk Score</p>
-                    <p class="text-2xl font-bold">{{ riskScore }}</p>
-                    <p class="text-xs mt-1">{{ riskLevel }}</p>
+                <div class="p-3 rounded-lg text-center" :class="`bg-${getRiskScoreColor(riskScore)}-50 dark:bg-${getRiskScoreColor(riskScore)}-900/30`">
+                    <p class="text-xs font-medium mb-1" :class="`text-${getRiskScoreColor(riskScore)}-700 dark:text-${getRiskScoreColor(riskScore)}-400`">Risk Score</p>
+                    <p class="text-2xl font-bold" :class="`text-${getRiskScoreColor(riskScore)}-800 dark:text-${getRiskScoreColor(riskScore)}-300`">{{ riskScore }}</p>
+                    <Badge variant="filled" :color="getRiskScoreColor(riskScore)" :label="riskLevel" class="mt-2" />
                 </div>
 
                 <div class="w-full">
@@ -156,11 +145,16 @@
 import { ref, computed } from 'vue';
 import { Link, useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/Components/Layout/AppLayout.vue';
+import Breadcrumb from '@/Components/UI/Breadcrumb.vue';
 import Card from '@/Components/UI/Card.vue';
 import Input from '@/Components/UI/Input.vue';
 import Select from '@/Components/UI/Select.vue';
 import Button from '@/Components/UI/Button.vue';
 import Modal from '@/Components/UI/Modal.vue';
+import Badge from '@/Components/UI/Badge.vue';
+import { useBadges } from '@/Composables/useBadges';
+
+const { getRiskLevelColor, getRiskScoreColor } = useBadges();
 
 const props = defineProps({
     entries: { type: Object, default: () => ({ data: [], links: [] }) },
@@ -188,13 +182,6 @@ const riskLevel = computed(() => {
     if (s >= 12) return 'High';
     if (s >= 6) return 'Medium';
     return 'Low';
-});
-const riskScoreClass = computed(() => {
-    const s = riskScore.value;
-    if (s >= 20) return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
-    if (s >= 12) return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400';
-    if (s >= 6) return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400';
-    return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
 });
 
 function openModal() { resetForm(); showModal.value = true; }
