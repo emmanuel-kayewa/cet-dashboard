@@ -2,15 +2,11 @@
     <AppLayout :directorates="directorates">
         <template #title>Import KPIs</template>
 
-        <nav class="text-sm mb-6">
-            <ol class="flex items-center gap-2 text-gray-500 dark:text-gray-400">
-                <li><Link href="/dashboard" class="hover:text-zesco-600">Dashboard</Link></li>
-                <li>/</li>
-                <li><Link href="/admin" class="hover:text-zesco-600">Admin</Link></li>
-                <li>/</li>
-                <li class="font-medium text-gray-900 dark:text-white">Import KPIs</li>
-            </ol>
-        </nav>
+        <Breadcrumb :items="[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Admin', href: '/admin' },
+            { label: 'Import KPIs', current: true }
+        ]" />
 
         <!-- Step 1: Upload -->
         <Card v-if="step === 'upload'" title="Upload KPI File">
@@ -232,6 +228,7 @@
 import { ref, computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import AppLayout from '@/Components/Layout/AppLayout.vue';
+import Breadcrumb from '@/Components/UI/Breadcrumb.vue';
 import Card from '@/Components/UI/Card.vue';
 
 const props = defineProps({
