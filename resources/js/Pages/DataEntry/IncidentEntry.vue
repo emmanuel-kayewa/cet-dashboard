@@ -2,13 +2,10 @@
     <AppLayout :directorates="directorates">
         <template #title>Incident Management</template>
 
-        <nav class="text-sm mb-6">
-            <ol class="flex items-center gap-2 text-gray-500 dark:text-gray-400">
-                <li><Link href="/dashboard" class="hover:text-zesco-600">Dashboard</Link></li>
-                <li>/</li>
-                <li class="font-medium text-gray-900 dark:text-white">Incidents</li>
-            </ol>
-        </nav>
+        <Breadcrumb :items="[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Incident Entry', current: true }
+        ]" />
 
         <Card title="Incident Log">
             <template #actions>
@@ -35,27 +32,11 @@
                             </td>
                             <td class="py-2 px-3 text-gray-500 text-xs">{{ inc.directorate?.code }}</td>
                             <td class="text-center py-2 px-3">
-                                <span class="text-xs px-2 py-0.5 rounded-full font-medium"
-                                      :class="{
-                                          'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400': inc.severity === 'critical',
-                                          'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400': inc.severity === 'high',
-                                          'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400': inc.severity === 'medium',
-                                          'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400': inc.severity === 'low',
-                                      }">
-                                    {{ inc.severity }}
-                                </span>
+                                <Badge variant="dot" :color="getIncidentSeverityColor(inc.severity)" :label="inc.severity" />
                             </td>
                             <td class="py-2 px-3 text-gray-500 text-xs">{{ formatLabel(inc.type) }}</td>
                             <td class="py-2 px-3">
-                                <span class="text-xs px-2 py-0.5 rounded-full font-medium"
-                                      :class="{
-                                          'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400': inc.status === 'reported',
-                                          'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400': inc.status === 'investigating',
-                                          'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400': inc.status === 'mitigating',
-                                          'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400': inc.status === 'resolved' || inc.status === 'closed',
-                                      }">
-                                    {{ inc.status }}
-                                </span>
+                                <Badge variant="dot" :color="getIncidentStatusColor(inc.status)" :label="inc.status" />
                             </td>
                             <td class="py-2 px-3 text-gray-500 text-xs">{{ inc.occurred_at ? new Date(inc.occurred_at).toLocaleDateString() : '—' }}</td>
                             <td class="text-center py-2 px-3">
@@ -191,11 +172,16 @@
 import { ref } from 'vue';
 import { Link, useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/Components/Layout/AppLayout.vue';
+import Breadcrumb from '@/Components/UI/Breadcrumb.vue';
 import Card from '@/Components/UI/Card.vue';
 import Input from '@/Components/UI/Input.vue';
 import Select from '@/Components/UI/Select.vue';
 import Button from '@/Components/UI/Button.vue';
 import Modal from '@/Components/UI/Modal.vue';
+import Badge from '@/Components/UI/Badge.vue';
+import { useBadges } from '@/Composables/useBadges';
+
+const { getIncidentSeverityColor, getIncidentStatusColor } = useBadges();
 
 const props = defineProps({
     incidents: { type: Object, default: () => ({ data: [], links: [] }) },
