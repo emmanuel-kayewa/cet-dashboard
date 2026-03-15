@@ -71,6 +71,11 @@ class ProcessAiRequest implements ShouldQueue
                 'query' => $aiService->answerQuery(
                     $this->params['question'] ?? ''
                 ),
+                'ppQuery' => $aiService->answerPpScopedQuery(
+                    $this->params['scope'] ?? [],
+                    $this->params['question'] ?? '',
+                    $this->params['history'] ?? [],
+                ),
                 'explainAnomaly' => $aiService->explainAnomaly(
                     $this->params['kpi_id'],
                     $this->params['directorate_id']
