@@ -1,10 +1,12 @@
 <template>
-    <BaseChart :option="chartOption" :height="height" />
+    <BaseChart :option="chartOption" :height="height" @chart-click="(p) => $emit('chart-click', p)" />
 </template>
 
 <script setup>
 import { computed } from 'vue';
 import BaseChart from './BaseChart.vue';
+
+defineEmits(['chart-click']);
 
 const props = defineProps({
     value: { type: Number, default: 0 },
