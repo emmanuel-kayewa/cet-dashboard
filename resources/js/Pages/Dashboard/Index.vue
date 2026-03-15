@@ -37,7 +37,7 @@
         </div>
 
         <!-- AI Summary Banner -->
-        <div v-if="textSummary" class="mb-6 bg-gradient-to-r from-zesco-50 to-blue-50 dark:from-zesco-900/20 dark:to-blue-900/20 border border-zesco-100 dark:border-zesco-800/30 rounded-xl p-4">
+        <div v-if="textSummary" class="mb-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4">
             <div class="flex items-start gap-3">
                 <div class="w-8 h-8 rounded-lg bg-zesco-100 dark:bg-zesco-900/40 flex items-center justify-center flex-shrink-0 mt-0.5">
                     <svg class="w-4 h-4 text-zesco-600 dark:text-zesco-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -163,24 +163,6 @@
             </div>
         </Card>
 
-        <!-- Alerts -->
-        <Card v-if="alerts.length > 0" title="Recent Alerts">
-            <div class="space-y-2">
-                <div v-for="alert in alerts" :key="alert.id" class="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/30">
-                    <div class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0"
-                         :class="{
-                             'bg-red-500': alert.severity === 'critical',
-                             'bg-amber-500': alert.severity === 'warning',
-                             'bg-blue-500': alert.severity === 'info',
-                         }"
-                    ></div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-900 dark:text-white">{{ alert.title }}</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ alert.message }}</p>
-                    </div>
-                </div>
-            </div>
-        </Card>
     </AppLayout>
 </template>
 
@@ -202,7 +184,6 @@ const props = defineProps({
     summary: { type: Object, default: () => ({}) },
     directorates: { type: Array, default: () => [] },
     textSummary: { type: String, default: '' },
-    alerts: { type: Array, default: () => [] },
     filters: { type: Object, default: () => ({ from: '', to: '' }) },
 });
 
@@ -265,7 +246,7 @@ onMounted(async () => {
         listenForUpdates(() => {
             // Reload all dashboard data when simulation pushes new data
             router.reload({
-                only: ['summary', 'textSummary', 'alerts'],
+                only: ['summary', 'textSummary'],
                 preserveScroll: true,
                 onSuccess: () => {
                     lastUpdated.value = new Date().toLocaleTimeString();
