@@ -2,13 +2,10 @@
     <AppLayout :directorates="directorates">
         <template #title>KPI Data Entry</template>
 
-        <nav class="text-sm mb-6">
-            <ol class="flex items-center gap-2 text-gray-500 dark:text-gray-400">
-                <li><Link href="/dashboard" class="hover:text-zesco-600">Dashboard</Link></li>
-                <li>/</li>
-                <li class="font-medium text-gray-900 dark:text-white">KPI Entry</li>
-            </ol>
-        </nav>
+        <Breadcrumb :items="[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'KPI Entry', current: true }
+        ]" />
 
         <Card title="Recent Entries">
             <template #actions>
@@ -146,6 +143,7 @@
 import { ref, computed } from 'vue';
 import { Link, useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/Components/Layout/AppLayout.vue';
+import Breadcrumb from '@/Components/UI/Breadcrumb.vue';
 import Card from '@/Components/UI/Card.vue';
 import Input from '@/Components/UI/Input.vue';
 import Select from '@/Components/UI/Select.vue';
