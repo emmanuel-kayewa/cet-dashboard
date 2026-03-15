@@ -1,10 +1,17 @@
 <template>
-    <div class="min-h-screen flex">
+    <div class="min-h-screen flex overflow-x-hidden">
         <!-- Mobile Overlay -->
         <div
             v-if="mobileOpen"
             class="fixed inset-0 bg-black/50 z-40 lg:hidden"
             @click="mobileOpen = false"
+        ></div>
+
+        <!-- Notifications Overlay -->
+        <div
+            v-if="notificationsOpen"
+            class="fixed inset-0 bg-black/30 z-40"
+            @click="notificationsOpen = false"
         ></div>
 
         <!-- Sidebar -->
@@ -60,16 +67,46 @@
                     <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">Directorates</p>
                 </div>
 
-                <SidebarLink
-                    v-for="d in sortedDirectorates"
-                    :key="d.slug"
-                    :href="`/dashboard/directorate/${d.slug}`"
-                    icon="building"
-                    :label="sidebarOpen ? d.name : ''"
-                    :title="d.name"
-                    :active="$page.url.includes(d.slug)"
-                    :color="d.color"
-                />
+                <template v-for="d in sortedDirectorates" :key="d.slug">
+                    <!-- PP Directorate gets an expandable sub-menu -->
+                    <SidebarGroup
+                        v-if="d.code === 'PP' && sidebarOpen"
+                        :label="d.name"
+                        :initial="d.code === 'CSE' ? 'CS' : d.code?.substring(0, 3)"
+                        :isActive="$page.url.includes('/pp') || $page.url.includes(d.slug)"
+                    >
+                        <SidebarLink
+                            href="/pp/dashboard"
+                            icon="chart"
+                            :label="'Dashboard'"
+                            :active="$page.url.startsWith('/pp/dashboard')"
+                        />
+                        <SidebarLink
+                            href="/pp/projects"
+                            icon="folder"
+                            label="Data Management"
+                            :active="$page.url.startsWith('/pp/projects') || $page.url.startsWith('/pp/milestones') || $page.url.startsWith('/pp/financials') || $page.url.startsWith('/pp/risks') || $page.url.startsWith('/pp/safeguards') || $page.url.startsWith('/pp/programme')"
+                        />
+                    </SidebarGroup>
+                    <!-- PP collapsed sidebar: just icon -->
+                    <SidebarLink
+                        v-else-if="d.code === 'PP' && !sidebarOpen"
+                        href="/pp/dashboard"
+                        :initial="d.code === 'CSE' ? 'CS' : d.code?.substring(0, 3)"
+                        label=""
+                        :title="d.name"
+                        :active="$page.url.includes('/pp') || $page.url.includes(d.slug)"
+                    />
+                    <!-- All other directorates: normal link -->
+                    <SidebarLink
+                        v-else
+                        :href="`/dashboard/directorate/${d.slug}`"
+                        :initial="d.code === 'CSE' ? 'CS' : d.code?.substring(0, 3)"
+                        :label="sidebarOpen ? d.name : ''"
+                        :title="d.name"
+                        :active="$page.url.includes(d.slug)"
+                    />
+                </template>
 
                 <template v-if="auth?.can_input_data">
                     <div v-if="sidebarOpen" class="pt-4 pb-2 px-3">
@@ -80,6 +117,7 @@
                     <SidebarLink href="/data-entry/projects" icon="folder" :label="sidebarOpen ? 'Projects' : ''" :active="$page.url.includes('/projects')" />
                     <SidebarLink href="/data-entry/risks" icon="shield" :label="sidebarOpen ? 'Risks' : ''" :active="$page.url.includes('/risks')" />
                     <SidebarLink href="/data-entry/incidents" icon="alert" :label="sidebarOpen ? 'Incidents' : ''" :active="$page.url.includes('/incidents')" />
+                    <SidebarLink href="/data-entry/wayleave-entries" icon="map" :label="sidebarOpen ? 'Wayleaves' : ''" :active="$page.url.includes('/wayleave-entries')" />
                 </template>
 
                 <template v-if="auth?.is_admin">
@@ -114,7 +152,13 @@
         </aside>
 
         <!-- Main Content -->
-        <div :class="['flex-1 flex flex-col transition-all duration-300', 'lg:ml-0', sidebarOpen ? 'lg:ml-64' : 'lg:ml-20']">
+        <div :class="[
+            'flex-1 flex flex-col transition-all duration-300 overflow-x-hidden max-w-full',
+            'lg:ml-0',
+            sidebarOpen ? 'lg:ml-64' : 'lg:ml-20',
+            // When AI drawer is open, reserve space so the drawer doesn't cover content.
+            aiOpen ? 'pr-80 sm:pr-96' : '',
+        ]">
             <!-- Top Header -->
             <header class="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-4 sm:px-6 no-print">
                 <div class="flex items-center gap-3 min-w-0 flex-1 mr-4">
@@ -131,11 +175,11 @@
 
                 <div class="flex items-center gap-2 sm:gap-4 flex-shrink-0">
                     <!-- Data Source Badge -->
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
-                          :class="app?.simulation_enabled ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'">
-                        <span class="w-1.5 h-1.5 rounded-full" :class="app?.simulation_enabled ? 'bg-amber-500' : 'bg-green-500'"></span>
-                        {{ app?.data_source === 'simulation' ? 'Simulation' : app?.data_source === 'manual' ? 'Manual' : 'Live' }}
-                    </span>
+                    <Badge 
+                        variant="filled-dot" 
+                        :color="getDataSourceColor(app?.data_source)" 
+                        :label="app?.data_source === 'simulation' ? 'Simulation' : app?.data_source === 'manual' ? 'Manual' : 'Live'" 
+                    />
 
                     <!-- Dark Mode Toggle -->
                     <button @click="toggleDark" class="p-2 rounded-lg text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition" title="Toggle dark mode">
@@ -145,6 +189,39 @@
                         <svg v-else class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                             <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
                         </svg>
+                    </button>
+
+                    <!-- Page AI (scoped) -->
+                    <button
+                        v-if="aiScope"
+                        type="button"
+                        @click="toggleAi"
+                        class="p-2 rounded-lg text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                        title="Ask AI about this view"
+                    >
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 13.5l.375 1.313a2.25 2.25 0 001.545 1.545L21.25 16l-1.33.442a2.25 2.25 0 00-1.545 1.545L18 19.5l-.375-1.313a2.25 2.25 0 00-1.545-1.545L14.75 16l1.33-.442a2.25 2.25 0 001.545-1.545L18 13.5z" />
+                        </svg>
+                    </button>
+
+                    <!-- Notifications -->
+                    <button
+                        type="button"
+                        @click="toggleNotifications"
+                        class="relative p-2 rounded-lg text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                        title="Notifications"
+                    >
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0a3 3 0 11-6 0m6 0H9" />
+                        </svg>
+
+                        <span
+                            v-if="unreadCount > 0"
+                            class="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-600 text-white text-[10px] leading-[18px] text-center font-semibold"
+                        >
+                            {{ unreadCount > 99 ? '99+' : unreadCount }}
+                        </span>
                     </button>
 
                     <!-- User Menu -->
@@ -167,6 +244,89 @@
                 </div>
             </header>
 
+            <!-- Notifications Drawer (right side) -->
+            <aside
+                :class="[
+                    'fixed inset-y-0 right-0 z-50 w-80 sm:w-96 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 transform transition-transform duration-300 no-print',
+                    notificationsOpen ? 'translate-x-0' : 'translate-x-full',
+                ]"
+            >
+                <div class="h-16 px-4 sm:px-5 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                    <div class="min-w-0">
+                        <p class="text-sm font-semibold text-gray-900 dark:text-white truncate">Notifications</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Unread: {{ unreadCount }}</p>
+                    </div>
+                    <button
+                        type="button"
+                        @click="notificationsOpen = false"
+                        class="p-2 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                        title="Close"
+                    >
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="h-[calc(100vh-4rem)] overflow-y-auto p-3 sm:p-4">
+                    <div v-if="notificationsLoading" class="text-sm text-gray-500 dark:text-gray-400 px-2 py-4">
+                        Loading notifications...
+                    </div>
+
+                    <div v-else-if="notifications.length === 0" class="text-sm text-gray-500 dark:text-gray-400 px-2 py-4">
+                        No unread notifications.
+                    </div>
+
+                    <div v-else class="space-y-2">
+                        <div
+                            v-for="alert in notifications"
+                            :key="alert.id"
+                            class="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-700/30"
+                        >
+                            <div
+                                class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0"
+                                :class="{
+                                    'bg-red-500': alert.severity === 'critical',
+                                    'bg-amber-500': alert.severity === 'warning',
+                                    'bg-blue-500': alert.severity === 'info',
+                                }"
+                            ></div>
+
+                            <div class="min-w-0 flex-1">
+                                <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ alert.title }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 break-words">{{ alert.message }}</p>
+                                <p v-if="alert.created_at" class="text-[11px] text-gray-400 dark:text-gray-500 mt-1">
+                                    {{ formatAlertTime(alert.created_at) }}
+                                </p>
+
+                                <div class="mt-2 flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        @click="markAlertRead(alert.id)"
+                                        class="text-xs font-medium text-zesco-700 hover:text-zesco-800 dark:text-zesco-400 dark:hover:text-zesco-300"
+                                    >
+                                        Mark as read
+                                    </button>
+                                    <button
+                                        type="button"
+                                        @click="dismissAlert(alert.id)"
+                                        class="text-xs font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                                    >
+                                        Dismiss
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <AiDrawer
+                :open="aiOpen"
+                :scope="aiScope"
+                @close="aiOpen = false"
+            />
+
             <!-- Flash Messages -->
             <div v-if="$page.props.flash?.success" class="mx-6 mt-4">
                 <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-300 px-4 py-3 rounded-lg text-sm">
@@ -180,7 +340,7 @@
             </div>
 
             <!-- Page Content -->
-            <main class="flex-1 p-6">
+            <main class="flex-1 p-6 overflow-x-hidden max-w-full">
                 <slot />
             </main>
         </div>
@@ -188,10 +348,23 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import { useDarkMode } from '@/Composables/useDarkMode';
 import SidebarLink from './SidebarLink.vue';
+import SidebarGroup from './SidebarGroup.vue';
+import Badge from '@/Components/UI/Badge.vue';
+import { useBadges } from '@/Composables/useBadges';
+import AiDrawer from '@/Components/AI/AiDrawer.vue';
+
+defineProps({
+    // Kept for backwards compatibility: many pages pass this, but AppLayout uses global shared props.
+    directorates: { type: Array, default: undefined },
+    // Optional scope object for page-scoped AI (e.g., PP portfolio, PP explorer, PP project).
+    aiScope: { type: Object, default: null },
+});
+
+const { getDataSourceColor } = useBadges();
 
 // No need for directorates prop - we get it from global Inertia share
 const page = usePage();
@@ -213,6 +386,107 @@ const sortedDirectorates = computed(() => {
 const sidebarOpen = ref(true);
 const mobileOpen = ref(false);
 const { isDark, toggle: toggleDark } = useDarkMode();
+
+// ── Page-scoped AI drawer ───────────────────────────────
+const aiOpen = ref(false);
+
+function toggleAi() {
+    aiOpen.value = !aiOpen.value;
+    if (aiOpen.value) {
+        notificationsOpen.value = false;
+        // Give the page breathing room when AI is open.
+        sidebarOpen.value = false;
+        mobileOpen.value = false;
+    }
+
+    // Charts (ECharts, etc.) often need a resize event when layout width changes.
+    window.dispatchEvent(new Event('resize'));
+}
+
+// ── Notifications (alerts) ───────────────────────────────
+const notificationsOpen = ref(false);
+const notificationsLoading = ref(false);
+const notifications = ref([]);
+const unreadCount = ref(0);
+
+function csrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+}
+
+async function fetchUnreadAlerts() {
+    notificationsLoading.value = true;
+    try {
+        const resp = await fetch('/api/alerts/unread?limit=20', {
+            headers: {
+                'Accept': 'application/json',
+            },
+        });
+        const data = await resp.json();
+        notifications.value = data.alerts || [];
+        unreadCount.value = data.unread_count ?? (notifications.value?.length || 0);
+    } catch {
+        // Notifications are optional; fail silently
+        notifications.value = [];
+        unreadCount.value = 0;
+    } finally {
+        notificationsLoading.value = false;
+    }
+}
+
+function toggleNotifications() {
+    notificationsOpen.value = !notificationsOpen.value;
+    if (notificationsOpen.value) {
+        aiOpen.value = false;
+        fetchUnreadAlerts();
+    }
+}
+
+async function markAlertRead(alertId) {
+    try {
+        await fetch(`/api/alerts/${alertId}/read`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken(),
+            },
+            body: JSON.stringify({}),
+        });
+    } finally {
+        await fetchUnreadAlerts();
+    }
+}
+
+async function dismissAlert(alertId) {
+    try {
+        await fetch(`/api/alerts/${alertId}/dismiss`, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken(),
+            },
+            body: JSON.stringify({}),
+        });
+    } finally {
+        await fetchUnreadAlerts();
+    }
+}
+
+function formatAlertTime(value) {
+    // value is typically an ISO string from Laravel
+    try {
+        const dt = new Date(value);
+        return isNaN(dt.getTime()) ? '' : dt.toLocaleString();
+    } catch {
+        return '';
+    }
+}
+
+onMounted(() => {
+    // Preload count so the bell can show it without opening
+    fetchUnreadAlerts();
+});
 </script>
 
 <style scoped>
