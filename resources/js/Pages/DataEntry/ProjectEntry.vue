@@ -2,13 +2,10 @@
     <AppLayout :directorates="directorates">
         <template #title>Project Updates</template>
 
-        <nav class="text-sm mb-6">
-            <ol class="flex items-center gap-2 text-gray-500 dark:text-gray-400">
-                <li><Link href="/dashboard" class="hover:text-zesco-600">Dashboard</Link></li>
-                <li>/</li>
-                <li class="font-medium text-gray-900 dark:text-white">Projects</li>
-            </ol>
-        </nav>
+        <Breadcrumb :items="[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Project Entry', current: true }
+        ]" />
 
         <Card title="Projects">
             <template #actions>
@@ -19,15 +16,7 @@
                      class="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg border border-gray-100 dark:border-gray-700">
                     <div class="flex items-center justify-between mb-2">
                         <h4 class="font-medium text-gray-900 dark:text-white">{{ project.name }}</h4>
-                        <span class="text-xs px-2 py-0.5 rounded-full"
-                              :class="{
-                                  'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400': project.status === 'on_track' || project.status === 'completed',
-                                  'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400': project.status === 'at_risk',
-                                  'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400': project.status === 'delayed',
-                                  'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400': project.status === 'planning' || project.status === 'in_progress',
-                              }">
-                            {{ project.status?.replace('_', ' ') }}
-                        </span>
+                        <Badge variant="dot" :color="getProjectStatusColor(project.status)" :label="project.status?.replace('_', ' ')" />
                     </div>
                     <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">{{ project.directorate?.code }} &middot; {{ project.description }}</p>
 
@@ -137,12 +126,17 @@
 import { ref } from 'vue';
 import { Link, useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/Components/Layout/AppLayout.vue';
+import Breadcrumb from '@/Components/UI/Breadcrumb.vue';
 import Card from '@/Components/UI/Card.vue';
 import Input from '@/Components/UI/Input.vue';
 import Select from '@/Components/UI/Select.vue';
 import Button from '@/Components/UI/Button.vue';
 import Modal from '@/Components/UI/Modal.vue';
+import Badge from '@/Components/UI/Badge.vue';
 import { formatCurrency } from '@/Composables/useFormatters';
+import { useBadges } from '@/Composables/useBadges';
+
+const { getProjectStatusColor } = useBadges();
 
 const props = defineProps({
     entries: { type: Object, default: () => ({ data: [], links: [] }) },
