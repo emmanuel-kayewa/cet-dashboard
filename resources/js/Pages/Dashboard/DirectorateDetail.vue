@@ -7,12 +7,13 @@
             { label: directorate.code, current: true }
         ]" />
 
-        <!-- Directorate Header -->
-        <div class="mb-6 p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-            <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+        <PageHeader>
+            <template #left>
                 <div class="flex items-center gap-4 min-w-0">
-                    <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg flex-shrink-0"
-                         :style="{ backgroundColor: directorate.color }">
+                    <div
+                        class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg flex-shrink-0"
+                        :style="{ backgroundColor: directorate.color }"
+                    >
                         {{ directorate.code?.charAt(0) }}
                     </div>
                     <div class="min-w-0">
@@ -20,7 +21,10 @@
                         <p class="text-sm text-gray-500 dark:text-gray-400 truncate">{{ directorate.code }} &middot; {{ directorate.head_name || 'Head not assigned' }}</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-6 text-center sm:ml-auto flex-shrink-0">
+            </template>
+
+            <template #metrics>
+                <div class="grid grid-cols-2 gap-4 text-center justify-items-center sm:flex sm:flex-wrap sm:items-center sm:gap-6 sm:justify-end">
                     <!-- PP uses portfolio stats from pp_* tables -->
                     <template v-if="directorate.code === 'PP' && ppPortfolio">
                         <div>
@@ -28,16 +32,20 @@
                             <p class="text-xs text-gray-500">Projects</p>
                         </div>
                         <div>
-                            <p class="text-2xl font-bold text-blue-600">${{ fmtM(ppPortfolio.boardSummary.totalCommitted) }}</p>
+                            <p class="text-2xl font-bold" :style="{ color: INVESTMENT.committed }">${{ fmtM(ppPortfolio.boardSummary.totalCommitted) }}</p>
                             <p class="text-xs text-gray-500">Committed</p>
                         </div>
                         <div>
-                            <p class="text-2xl font-bold" :class="ppPortfolio.boardSummary.spendPct >= 50 ? 'text-green-600' : 'text-amber-600'">
+                            <p
+                                class="text-2xl font-bold"
+                                :style="{ color: (ppPortfolio.boardSummary.spendPct ?? 0) >= 50 ? RAG.green : RAG.amber }"
+                            >
                                 {{ ppPortfolio.boardSummary.spendPct }}%
                             </p>
                             <p class="text-xs text-gray-500">Spend</p>
                         </div>
                     </template>
+
                     <!-- Other directorates use generic KPI stats -->
                     <template v-else>
                         <div>
@@ -45,21 +53,28 @@
                             <p class="text-xs text-gray-500">KPIs</p>
                         </div>
                         <div>
-                            <p class="text-2xl font-bold" :class="kpiSummary.completion_percentage >= 75 ? 'text-green-600' : 'text-amber-600'">
+                            <p
+                                class="text-2xl font-bold"
+                                :style="{ color: (kpiSummary.completion_percentage ?? 0) >= 75 ? RAG.green : RAG.amber }"
+                            >
                                 {{ kpiSummary.completion_percentage || 0 }}%
                             </p>
                             <p class="text-xs text-gray-500">Completion</p>
                         </div>
                         <div>
-                            <p class="text-2xl font-bold" :class="kpiSummary.high_risk > 2 ? 'text-red-600' : 'text-gray-900 dark:text-white'">
+                            <p
+                                class="text-2xl font-bold"
+                                :class="kpiSummary.high_risk > 2 ? '' : 'text-gray-900 dark:text-white'"
+                                :style="kpiSummary.high_risk > 2 ? { color: RAG.red } : undefined"
+                            >
                                 {{ kpiSummary.high_risk || 0 }}
                             </p>
                             <p class="text-xs text-gray-500">High Risks</p>
                         </div>
                     </template>
                 </div>
-            </div>
-        </div>
+            </template>
+        </PageHeader>
 
         <!-- Filters (generic directorates only) -->
         <div v-if="directorate.code !== 'PP'" class="flex flex-wrap items-end gap-4 mb-6 no-print">
@@ -259,10 +274,12 @@ import AppLayout from '@/Components/Layout/AppLayout.vue';
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue';
 import KpiCard from '@/Components/Dashboard/KpiCard.vue';
 import Card from '@/Components/UI/Card.vue';
+import PageHeader from '@/Components/UI/PageHeader.vue';
 import Select from '@/Components/UI/Select.vue';
 import Badge from '@/Components/UI/Badge.vue';
 import DateRangePicker from '@/Components/UI/DateRangePicker.vue';
 import LineChart from '@/Components/Charts/LineChart.vue';
+import { INVESTMENT, RAG } from '@/Composables/useChartPalette';
 import { formatCurrency } from '@/Composables/useFormatters';
 import { useBadges } from '@/Composables/useBadges';
 
