@@ -3,10 +3,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import Highcharts from 'highcharts';
 import Highcharts3D from 'highcharts/highcharts-3d';
 import { useDarkMode } from '@/Composables/useDarkMode';
+import { useChartPalettes } from '@/Composables/useChartPalettes';
 
 // Enable 3D module (handle ESM/CJS interop + HMR)
 const init3d = (Highcharts3D && typeof Highcharts3D === 'object' && 'default' in Highcharts3D)
@@ -24,7 +25,7 @@ const props = defineProps({
     data: { type: Array, default: () => [] },       // [{ name, value, color? }]
     colors: {
         type: Array,
-        default: () => ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'],
+        default: () => [],
     },
     height: { type: String, default: '400px' },
     title: { type: String, default: '' },
@@ -37,6 +38,14 @@ const props = defineProps({
 
 const chartEl = ref(null);
 const { isDark } = useDarkMode();
+const { categorical } = useChartPalettes();
+
+const effectiveColors = computed(() => {
+    const list = (props.colors && props.colors.length > 0)
+        ? props.colors
+        : (categorical.value || []);
+    return list.length > 0 ? list : ['#64748b'];
+});
 let chart = null;
 let resizeObserver = null;
 
@@ -44,7 +53,7 @@ function buildOptions() {
     const seriesData = props.data.map((d, i) => ({
         name: d.name,
         y: d.value,
-        color: d.color || props.colors[i % props.colors.length],
+        color: d.color || effectiveColors.value[i % effectiveColors.value.length],
     }));
 
     const textColor = isDark.value ? '#cbd5e1' : '#334155';

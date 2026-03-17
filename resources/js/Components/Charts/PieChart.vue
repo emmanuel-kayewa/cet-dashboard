@@ -5,15 +5,25 @@
 <script setup>
 import { computed } from 'vue';
 import BaseChart from './BaseChart.vue';
+import { useChartPalettes } from '@/Composables/useChartPalettes';
 
 defineEmits(['chart-click']);
 
 const props = defineProps({
     data: { type: Array, default: () => [] }, // [{name, value}]
-    colors: { type: Array, default: () => ['#1e40af', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe'] },
+    colors: { type: Array, default: () => [] },
     height: { type: String, default: '320px' },
     showLabel: { type: Boolean, default: true },
     roseType: { type: [String, Boolean], default: false }, // 'radius', 'area'
+});
+
+const { categorical } = useChartPalettes();
+
+const effectiveColors = computed(() => {
+    const list = (props.colors && props.colors.length > 0)
+        ? props.colors
+        : (categorical.value || []);
+    return list.length > 0 ? list : ['#64748b'];
 });
 
 const chartOption = computed(() => ({
@@ -51,7 +61,7 @@ const chartOption = computed(() => ({
         },
         data: props.data.map((d, i) => ({
             ...d,
-            itemStyle: { color: d.color || props.colors[i % props.colors.length] },
+            itemStyle: { color: d.color || effectiveColors.value[i % effectiveColors.value.length] },
         })),
         animationType: 'scale',
         animationDuration: 800,

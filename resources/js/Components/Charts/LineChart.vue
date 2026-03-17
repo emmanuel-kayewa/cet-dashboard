@@ -5,17 +5,24 @@
 <script setup>
 import { computed } from 'vue';
 import BaseChart from './BaseChart.vue';
+import { useChartPalettes } from '@/Composables/useChartPalettes';
 
 const props = defineProps({
     data: { type: Array, default: () => [] },
     xField: { type: String, default: 'label' },
     yField: { type: String, default: 'value' },
     seriesName: { type: String, default: 'Value' },
-    color: { type: String, default: '#1e40af' },
+    color: { type: String, default: '' },
     height: { type: String, default: '320px' },
     smooth: { type: Boolean, default: true },
     showArea: { type: Boolean, default: true },
     forecast: { type: Array, default: () => [] },
+});
+
+const { categorical } = useChartPalettes();
+
+const effectiveColor = computed(() => {
+    return props.color || categorical.value?.[0] || '#64748b';
 });
 
 const chartOption = computed(() => {
@@ -31,15 +38,15 @@ const chartOption = computed(() => {
             smooth: props.smooth,
             symbol: 'circle',
             symbolSize: 6,
-            lineStyle: { width: 2.5, color: props.color },
-            itemStyle: { color: props.color },
+            lineStyle: { width: 2.5, color: effectiveColor.value },
+            itemStyle: { color: effectiveColor.value },
             areaStyle: props.showArea ? {
                 color: {
                     type: 'linear',
                     x: 0, y: 0, x2: 0, y2: 1,
                     colorStops: [
-                        { offset: 0, color: props.color + '30' },
-                        { offset: 1, color: props.color + '05' },
+                        { offset: 0, color: effectiveColor.value + '30' },
+                        { offset: 1, color: effectiveColor.value + '05' },
                     ],
                 },
             } : undefined,

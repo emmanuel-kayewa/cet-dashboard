@@ -5,6 +5,7 @@
 <script setup>
 import { computed } from 'vue';
 import BaseChart from './BaseChart.vue';
+import { useChartPalettes } from '@/Composables/useChartPalettes';
 
 defineEmits(['chart-click']);
 
@@ -13,11 +14,21 @@ const props = defineProps({
     xField: { type: String, default: 'label' },
     yField: { type: String, default: 'value' },
     seriesName: { type: String, default: 'Value' },
-    colors: { type: Array, default: () => ['#1e40af', '#3b82f6', '#60a5fa', '#93c5fd'] },
+    colors: { type: Array, default: () => [] },
     height: { type: String, default: '320px' },
     horizontal: { type: Boolean, default: false },
     stacked: { type: Boolean, default: false },
     multiSeries: { type: Array, default: () => [] }, // [{name, field, color}]
+});
+
+const { categorical } = useChartPalettes();
+
+const effectiveColors = computed(() => {
+    const list = (props.colors && props.colors.length > 0)
+        ? props.colors
+        : (categorical.value || []);
+
+    return list.length > 0 ? list : ['#64748b'];
 });
 
 const chartOption = computed(() => {
@@ -29,7 +40,7 @@ const chartOption = computed(() => {
             name: s.name,
             type: 'bar',
             data: props.data.map(d => d[s.field]),
-            itemStyle: { color: s.color || props.colors[i % props.colors.length], borderRadius: [4, 4, 0, 0] },
+            itemStyle: { color: s.color || effectiveColors.value[i % effectiveColors.value.length], borderRadius: [4, 4, 0, 0] },
             stack: props.stacked ? 'total' : undefined,
             barMaxWidth: 40,
             animationDuration: 600 + i * 200,
@@ -40,7 +51,7 @@ const chartOption = computed(() => {
             type: 'bar',
             data: props.data.map((d, i) => ({
                 value: d[props.yField],
-                itemStyle: { color: props.colors[i % props.colors.length], borderRadius: props.horizontal ? [0, 4, 4, 0] : [4, 4, 0, 0] },
+                itemStyle: { color: effectiveColors.value[i % effectiveColors.value.length], borderRadius: props.horizontal ? [0, 4, 4, 0] : [4, 4, 0, 0] },
             })),
             barMaxWidth: 40,
             animationDuration: 800,

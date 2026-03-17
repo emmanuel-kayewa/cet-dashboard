@@ -54,10 +54,19 @@ const computedHeight = computed(() => {
     return props.height;
 });
 
-/** Build the dark mode overlay for chart options */
-function getDarkOverrides() {
-    if (!isDark.value) return {};
+/**
+ * Build theme overlays for chart options.
+ * We always force a transparent canvas background so charts blend with their parent cards.
+ */
+function getThemeOverrides() {
+    const base = {
+        backgroundColor: 'transparent',
+    };
+
+    if (!isDark.value) return base;
+
     return {
+        ...base,
         tooltip: {
             backgroundColor: 'rgba(30, 41, 59, 0.95)',
             borderColor: '#475569',
@@ -66,11 +75,16 @@ function getDarkOverrides() {
     };
 }
 
+function buildOption(option) {
+    // Force our overlays to win over any per-chart options/theme defaults.
+    return { ...option, ...getThemeOverrides() };
+}
+
 function initChart() {
     if (!chartEl.value) return;
     if (chart) chart.dispose();
     chart = echarts.init(chartEl.value, isDark.value ? 'dark' : props.theme);
-    chart.setOption({ ...props.option, ...getDarkOverrides() });
+    chart.setOption(buildOption(props.option), { notMerge: true, lazyUpdate: false });
     chart.on('click', (params) => emit('chart-click', params));
     emit('chart-ready', chart);
 }
@@ -100,8 +114,7 @@ watch(
     (newOption) => {
         if (chart) {
             chart.setOption({
-                ...newOption,
-                ...getDarkOverrides(),
+                ...buildOption(newOption),
                 animation: true,
                 animationDurationUpdate: 750,
                 animationEasingUpdate: 'cubicInOut',
@@ -112,7 +125,9 @@ watch(
 );
 
 // React to dark mode toggle via the reactive composable ref
-watch(isDark, () => {
+watch(isDark, async () => {
+    // Ensure DOM/theme class updates settle before re-init.
+    await nextTick();
     initChart();
 });
 

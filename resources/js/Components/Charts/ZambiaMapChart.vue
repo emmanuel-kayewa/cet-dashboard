@@ -46,7 +46,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import * as echarts from 'echarts/core';
 import BaseChart from './BaseChart.vue';
 import { useDarkMode } from '@/Composables/useDarkMode';
-import { SEQUENTIAL } from '@/Composables/useChartPalette';
+import { useChartPalettes } from '@/Composables/useChartPalettes';
 
 const { isDark } = useDarkMode();
 
@@ -64,7 +64,7 @@ const props = defineProps({
     /** Investment data field name in data items */
     investmentField: { type: String, default: 'investment' },
     height: { type: String, default: '400px' },
-    colors: { type: Array, default: () => SEQUENTIAL },
+    colors: { type: Array, default: () => [] },
 });
 
 const emit = defineEmits(['region-click']);
@@ -73,6 +73,15 @@ const viewMode = ref('chart');
 const activeMetric = ref('count');
 const geoLoaded = ref(false);
 const mapChart = ref(null);
+
+const { sequential } = useChartPalettes();
+
+const effectiveRamp = computed(() => {
+    const list = (props.colors && props.colors.length > 0)
+        ? props.colors
+        : (sequential.value || []);
+    return list.length > 0 ? list : ['#e2e8f0', '#94a3b8', '#334155'];
+});
 
 const metrics = [
     { key: 'count', label: 'Project Count' },
@@ -143,7 +152,7 @@ const mapOption = computed(() => {
                 fontSize: 11,
             },
             inRange: {
-                color: props.colors,
+                color: effectiveRamp.value,
             },
             calculable: true,
             itemWidth: 12,

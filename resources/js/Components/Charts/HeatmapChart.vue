@@ -5,6 +5,7 @@
 <script setup>
 import { computed } from 'vue';
 import BaseChart from './BaseChart.vue';
+import { useChartPalettes } from '@/Composables/useChartPalettes';
 
 const props = defineProps({
     data: { type: Array, default: () => [] }, // [[x, y, value]]
@@ -12,6 +13,13 @@ const props = defineProps({
     yLabels: { type: Array, default: () => [] },
     height: { type: String, default: '400px' },
     title: { type: String, default: '' },
+});
+
+const { sequential } = useChartPalettes();
+
+const effectiveRamp = computed(() => {
+    const list = sequential.value || [];
+    return list.length > 0 ? list : ['#e2e8f0', '#94a3b8', '#334155'];
 });
 
 const chartOption = computed(() => ({
@@ -46,7 +54,7 @@ const chartOption = computed(() => ({
         left: 'center',
         bottom: '0%',
         inRange: {
-            color: ['#f0f9ff', '#bae6fd', '#38bdf8', '#0284c7', '#0c4a6e'],
+            color: effectiveRamp.value,
         },
         textStyle: { color: '#64748b' },
     },
