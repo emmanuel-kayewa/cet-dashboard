@@ -7,9 +7,8 @@
 
         <Breadcrumb :items="breadcrumbItems" />
 
-        <!-- Project Header -->
-        <div class="mb-6 p-5 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-            <div class="flex flex-col lg:flex-row lg:items-start gap-4">
+        <PageHeader stackAt="lg" alignAt="start" class="p-5">
+            <template #left>
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-3 mb-2">
                         <span :class="ragDot(projectData.project.rag_status)" class="w-4 h-4 rounded-full flex-shrink-0"></span>
@@ -25,30 +24,34 @@
                         <strong>Key Issue:</strong> {{ projectData.project.key_issue_summary }}
                     </p>
                 </div>
+            </template>
 
-                <!-- Summary metrics -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 lg:flex-shrink-0">
-                    <div class="text-center">
+            <template #metrics>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                    <div>
                         <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ projectData.project.progress_pct ?? 0 }}%</p>
                         <p class="text-xs text-gray-500">Progress</p>
                     </div>
-                    <div class="text-center">
-                        <p class="text-2xl font-bold text-blue-600">${{ fmtM(projectData.project.cost_usd) }}</p>
+                    <div>
+                        <p class="text-2xl font-bold" :style="{ color: INVESTMENT.committed }">${{ fmtM(projectData.project.cost_usd) }}</p>
                         <p class="text-xs text-gray-500">Cost (USD)</p>
                     </div>
-                    <div class="text-center" v-if="projectData.project.capacity_mw">
+                    <div v-if="projectData.project.capacity_mw">
                         <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ projectData.project.capacity_mw }} MW</p>
                         <p class="text-xs text-gray-500">Capacity</p>
                     </div>
-                    <div class="text-center">
-                        <p class="text-2xl font-bold" :class="projectData.summary.burnRate >= 50 ? 'text-green-600' : 'text-amber-600'">
+                    <div>
+                        <p
+                            class="text-2xl font-bold"
+                            :style="{ color: (projectData.summary.burnRate ?? 0) >= 50 ? RAG.green : RAG.amber }"
+                        >
                             {{ projectData.summary.burnRate }}%
                         </p>
                         <p class="text-xs text-gray-500">Burn Rate</p>
                     </div>
                 </div>
-            </div>
-        </div>
+            </template>
+        </PageHeader>
 
         <!-- Project Details Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
@@ -98,23 +101,22 @@
                     <div class="grid grid-cols-3 gap-4 mb-4">
                         <div>
                             <p class="text-xs text-gray-400">Committed (USD)</p>
-                            <p class="text-xl font-bold text-gray-900 dark:text-white">${{ fmtM(projectData.summary.totalCommitted) }}</p>
+                            <p class="text-xl font-bold" :style="{ color: INVESTMENT.committed }">${{ fmtM(projectData.summary.totalCommitted) }}</p>
                         </div>
                         <div>
                             <p class="text-xs text-gray-400">Paid-to-Date (USD)</p>
-                            <p class="text-xl font-bold text-green-600">${{ fmtM(projectData.summary.totalPaid) }}</p>
+                            <p class="text-xl font-bold" :style="{ color: INVESTMENT.paid }">${{ fmtM(projectData.summary.totalPaid) }}</p>
                         </div>
                         <div>
                             <p class="text-xs text-gray-400">Burn Rate</p>
-                            <p class="text-xl font-bold" :class="projectData.summary.burnRate >= 50 ? 'text-green-600' : 'text-amber-600'">
+                            <p class="text-xl font-bold" :style="{ color: (projectData.summary.burnRate ?? 0) >= 50 ? RAG.green : RAG.amber }">
                                 {{ projectData.summary.burnRate }}%
                             </p>
                         </div>
                     </div>
                     <div class="h-3 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
                         <div class="h-full rounded-full transition-all duration-500"
-                             :class="projectData.summary.burnRate > 80 ? 'bg-green-500' : projectData.summary.burnRate > 50 ? 'bg-blue-500' : 'bg-amber-500'"
-                             :style="{ width: Math.min(projectData.summary.burnRate, 100) + '%' }"></div>
+                             :style="{ width: Math.min(projectData.summary.burnRate, 100) + '%', backgroundColor: (projectData.summary.burnRate ?? 0) > 80 ? RAG.green : (projectData.summary.burnRate ?? 0) > 50 ? INVESTMENT.committed : RAG.amber }"></div>
                     </div>
                 </Card>
             </div>
@@ -122,11 +124,11 @@
 
         <!-- ── Tabbed Sections ── -->
         <div class="mb-6">
-            <div class="flex border-b border-gray-200 dark:border-gray-700 mb-4 no-print">
+            <div class="flex border-b border-gray-200 dark:border-gray-700 mb-4 no-print overflow-x-auto flex-nowrap whitespace-nowrap pr-2 pb-1">
                 <button v-for="tab in tabs" :key="tab.key"
                         @click="activeTab = tab.key"
                         :class="[
-                            'px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px',
+                            'px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px flex-shrink-0 whitespace-nowrap',
                             activeTab === tab.key
                                 ? 'border-zesco-600 text-zesco-600 dark:text-zesco-400'
                                 : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
@@ -365,6 +367,8 @@ import Breadcrumb from '@/Components/UI/Breadcrumb.vue';
 import Card from '@/Components/UI/Card.vue';
 import Badge from '@/Components/UI/Badge.vue';
 import RadialProgress from '@/Components/Charts/RadialProgress.vue';
+import PageHeader from '@/Components/UI/PageHeader.vue';
+import { INVESTMENT, RAG } from '@/Composables/useChartPalette';
 
 const props = defineProps({
     projectData: { type: Object, required: true },
