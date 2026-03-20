@@ -1,5 +1,5 @@
 <template>
-    <div ref="chartEl" :style="{ width: '100%', height: computedHeight }" class="echarts-container"></div>
+    <div ref="chartEl" :style="{ width: '100%', height: computedHeight }" class="echarts-container overflow-hidden"></div>
 </template>
 
 <script setup>
