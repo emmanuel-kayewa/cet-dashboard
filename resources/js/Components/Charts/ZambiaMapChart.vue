@@ -69,7 +69,7 @@ const props = defineProps({
 
 const emit = defineEmits(['region-click']);
 
-const viewMode = ref('chart');
+const viewMode = ref('map'); // Default to map view
 const activeMetric = ref('count');
 const geoLoaded = ref(false);
 const mapChart = ref(null);
