@@ -49,7 +49,6 @@
                     xField="label"
                     yField="value"
                     seriesName="Pending"
-                    :colors="['#f59e0b', '#d97706', '#b45309', '#92400e', '#78350f', '#451a03']"
                     height="320px"
                     horizontal
                 />
@@ -87,7 +86,6 @@
                     xField="label"
                     yField="value"
                     seriesName="Pending"
-                    :colors="['#8b5cf6', '#7c3aed', '#6d28d9', '#5b21b6']"
                     height="320px"
                     horizontal
                 />
@@ -208,14 +206,14 @@ const wayleaveData = computed(() =>
 );
 
 const wayleaveMultiSeries = [
-    { name: 'Received', field: 'received', color: '#3b82f6' },
-    { name: 'Cleared', field: 'cleared', color: '#22c55e' },
-    { name: 'Pending', field: 'pending', color: '#f59e0b' },
+    { name: 'Received', field: 'received' },
+    { name: 'Cleared', field: 'cleared' },
+    { name: 'Pending', field: 'pending' },
 ];
 
 const wayleavePieData = computed(() => [
-    { name: 'Cleared', value: 46, color: '#22c55e' },
-    { name: 'Pending', value: 41, color: '#f59e0b' },
+    { name: 'Cleared', value: 46 },
+    { name: 'Pending', value: 41 },
 ]);
 
 const wayleavePendingData = computed(() =>
@@ -291,14 +289,14 @@ const surveyData = computed(() =>
 );
 
 const surveyMultiSeries = [
-    { name: 'Received', field: 'received', color: '#8b5cf6' },
-    { name: 'Cleared', field: 'cleared', color: '#22c55e' },
-    { name: 'Pending', field: 'pending', color: '#ef4444' },
+    { name: 'Received', field: 'received' },
+    { name: 'Cleared', field: 'cleared' },
+    { name: 'Pending', field: 'pending' },
 ];
 
 const surveyPieData = computed(() => [
-    { name: 'Cleared', value: 24, color: '#22c55e' },
-    { name: 'Pending', value: 9, color: '#ef4444' },
+    { name: 'Cleared', value: 24 },
+    { name: 'Pending', value: 9 },
 ]);
 
 const surveyPendingData = computed(() =>
