@@ -5,46 +5,28 @@
     >
         <template #title>Grid Impact Studies</template>
 
-        <Breadcrumb :items="[
-            { label: 'Dashboard', href: '/dashboard' },
-            { label: 'PP Portfolio', href: '/pp/dashboard' },
-            { label: 'Grid Impact Studies', current: true }
-        ]" />
+        <!-- Header only shown when NOT in directorate sidebar mode -->
+        <template v-if="!directorateStore.activeDirectorate">
+            <Breadcrumb :items="[
+                { label: 'Dashboard', href: '/dashboard' },
+                { label: 'PP Portfolio', href: '/pp/dashboard' },
+                { label: 'Grid Impact Studies', current: true }
+            ]" />
 
-        <!-- Page Header -->
-        <div class="mb-6 p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-            <div class="flex flex-col sm:flex-row sm:items-center gap-4">
-                <div class="flex items-center gap-4 min-w-0">
-                    <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg flex-shrink-0 bg-purple-600">
-                        GIS
+            <PageHeader :metrics="headerMetrics">
+                <template #left>
+                    <div class="flex items-center gap-4 min-w-0">
+                        <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg flex-shrink-0" :style="{ backgroundColor: CATEGORICAL[5] }">
+                            GIS
+                        </div>
+                        <div class="min-w-0">
+                            <h2 class="text-lg font-bold text-gray-900 dark:text-white truncate">Grid Impact Studies Tracker</h2>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">IPP grid connection studies &middot; Click charts to filter</p>
+                        </div>
                     </div>
-                    <div class="min-w-0">
-                        <h2 class="text-lg font-bold text-gray-900 dark:text-white truncate">Grid Impact Studies Tracker</h2>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">IPP grid connection studies &middot; Click charts to filter</p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-6 text-center sm:ml-auto flex-shrink-0">
-                    <div>
-                        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ gridData.kpis.totalStudies }}</p>
-                        <p class="text-xs text-gray-500">Studies</p>
-                    </div>
-                    <div>
-                        <p class="text-2xl font-bold text-green-600">{{ gridData.kpis.approvedCount }}</p>
-                        <p class="text-xs text-gray-500">Approved</p>
-                    </div>
-                    <div>
-                        <p class="text-2xl font-bold text-blue-600">{{ gridData.kpis.totalCapacityMw }}</p>
-                        <p class="text-xs text-gray-500">Total MW</p>
-                    </div>
-                    <div>
-                        <p class="text-2xl font-bold" :class="gridData.kpis.avgProgress >= 50 ? 'text-green-600' : 'text-amber-600'">
-                            {{ gridData.kpis.avgProgress }}%
-                        </p>
-                        <p class="text-xs text-gray-500">Avg Progress</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+                </template>
+            </PageHeader>
+        </template>
 
         <!-- Quick Links -->
         <div class="flex items-center gap-3 mb-6 no-print">
@@ -130,37 +112,41 @@
         <div class="mb-8">
             <Card title="Stage Funnel" noPadding>
                 <div class="p-4">
-                    <div class="flex items-end gap-2 justify-center">
-                        <div v-for="(stage, i) in gridData.stageFunnel" :key="stage.stage"
-                             class="flex flex-col items-center cursor-pointer group"
-                             @click="addFilter('stage', stageKeys[i])">
-                            <!-- Bar -->
-                            <div class="relative mb-2">
-                                <div class="w-16 sm:w-20 rounded-t-lg transition-all duration-300 group-hover:opacity-80"
-                                     :style="{ height: funnelHeight(stage.count) + 'px', backgroundColor: stage.color, minHeight: '24px' }">
-                                    <span class="absolute inset-0 flex items-center justify-center text-white font-bold text-sm">
-                                        {{ stage.count }}
-                                    </span>
+                    <div class="overflow-x-auto -mx-4 px-4">
+                        <div class="min-w-max">
+                            <div class="flex items-end gap-2 justify-center">
+                                <div v-for="(stage, i) in gridData.stageFunnel" :key="stage.stage"
+                                     class="flex flex-col items-center cursor-pointer group"
+                                     @click="addFilter('stage', stageKeys[i])">
+                                    <!-- Bar -->
+                                    <div class="relative mb-2">
+                                        <div class="w-16 sm:w-20 rounded-t-lg transition-all duration-300 group-hover:opacity-80"
+                                             :style="{ height: funnelHeight(stage.count) + 'px', backgroundColor: stage.color, minHeight: '24px' }">
+                                            <span class="absolute inset-0 flex items-center justify-center text-white font-bold text-sm">
+                                                {{ stage.count }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <!-- Label -->
+                                    <p class="text-[10px] text-gray-500 dark:text-gray-400 text-center leading-tight w-16 sm:w-20 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
+                                        {{ stage.stage }}
+                                    </p>
+                                    <!-- Arrow connector -->
+                                    <div v-if="i < gridData.stageFunnel.length - 1"
+                                         class="hidden sm:block absolute" style="right: -8px; top: 50%;">
+                                    </div>
                                 </div>
                             </div>
-                            <!-- Label -->
-                            <p class="text-[10px] text-gray-500 dark:text-gray-400 text-center leading-tight w-16 sm:w-20 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
-                                {{ stage.stage }}
-                            </p>
-                            <!-- Arrow connector -->
-                            <div v-if="i < gridData.stageFunnel.length - 1"
-                                 class="hidden sm:block absolute" style="right: -8px; top: 50%;">
+                            <!-- Flow arrows between stages -->
+                            <div class="flex items-center justify-center gap-0 mt-2">
+                                <template v-for="(stage, i) in gridData.stageFunnel" :key="'arrow-' + i">
+                                    <div class="w-16 sm:w-20 h-1 rounded" :style="{ backgroundColor: stage.color }"></div>
+                                    <svg v-if="i < gridData.stageFunnel.length - 1" class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </template>
                             </div>
                         </div>
-                    </div>
-                    <!-- Flow arrows between stages -->
-                    <div class="flex items-center justify-center gap-0 mt-2">
-                        <template v-for="(stage, i) in gridData.stageFunnel" :key="'arrow-' + i">
-                            <div class="w-16 sm:w-20 h-1 rounded" :style="{ backgroundColor: stage.color }"></div>
-                            <svg v-if="i < gridData.stageFunnel.length - 1" class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                            </svg>
-                        </template>
                     </div>
                 </div>
             </Card>
@@ -176,7 +162,7 @@
             <!-- Technology Pie -->
             <Card title="Studies by Technology">
                 <Pie3DChart
-                    :data="gridData.techPie"
+                    :data="(gridData.techPie || []).map(d => ({ name: d.name, value: d.value }))"
                     height="300px"
                     @chart-click="(p) => addFilter('technology', p.name)"
                 />
@@ -185,7 +171,7 @@
             <!-- Study Type Breakdown -->
             <Card title="Report vs Inception">
                 <Pie3DChart
-                    :data="gridData.typeBreakdown"
+                    :data="(gridData.typeBreakdown || []).map(d => ({ name: d.name, value: d.value }))"
                     height="300px"
                     @chart-click="(p) => addFilter('study_type', p.name.toLowerCase())"
                 />
@@ -200,7 +186,6 @@
                     xField="label"
                     yField="value"
                     seriesName="Studies"
-                    :colors="CATEGORICAL"
                     height="300px"
                     horizontal
                     @chart-click="(p) => addFilter('project_area', p.name || extractBarLabel(p))"
@@ -214,7 +199,7 @@
                     xField="label"
                     yField="value"
                     seriesName="Studies"
-                    :colors="progressColors"
+                    :colors="pickCategorical(progressBarData.length)"
                     height="300px"
                 />
             </Card>
@@ -323,23 +308,46 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, defineAsyncComponent } from 'vue';
+import { ref, computed, watch, defineAsyncComponent, onMounted } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Components/Layout/AppLayout.vue';
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue';
 import Card from '@/Components/UI/Card.vue';
 import Badge from '@/Components/UI/Badge.vue';
+import PageHeader from '@/Components/UI/PageHeader.vue';
 import Select from '@/Components/UI/Select.vue';
 import Input from '@/Components/UI/Input.vue';
 import BarChart from '@/Components/Charts/BarChart.vue';
-import { CATEGORICAL } from '@/Composables/useChartPalette';
+import { CATEGORICAL, RAG } from '@/Composables/useChartPalette';
+import { useChartPalettes } from '@/Composables/useChartPalettes';
+import { useDirectorateStore } from '@/stores/useDirectorateStore';
 
 const Pie3DChart = defineAsyncComponent(() => import('@/Components/Charts/Pie3DChart.vue'));
+
+const { pickCategorical } = useChartPalettes();
+const directorateStore = useDirectorateStore();
 
 const props = defineProps({
     gridData: { type: Object, required: true },
     directorate: { type: Object, required: true },
     directorates: { type: Array, default: () => [] },
+});
+
+// Auto-enter directorate mode if not already active (e.g. direct URL navigation)
+onMounted(() => {
+    if (!directorateStore.activeDirectorate) {
+        directorateStore.enterDirectorate(props.directorate);
+    }
+});
+
+const headerMetrics = computed(() => {
+    const avgColor = (props.gridData.kpis?.avgProgress ?? 0) >= 50 ? RAG.green : RAG.amber;
+    return [
+        { label: 'Studies', value: props.gridData.kpis?.totalStudies ?? 0 },
+        { label: 'Approved', value: props.gridData.kpis?.approvedCount ?? 0, color: RAG.green },
+        { label: 'Total MW', value: props.gridData.kpis?.totalCapacityMw ?? 0, color: CATEGORICAL[0] },
+        { label: 'Avg Progress', value: `${props.gridData.kpis?.avgProgress ?? 0}%`, color: avgColor },
+    ];
 });
 
 // ── Constants ──
@@ -352,7 +360,6 @@ const filterLabels = {
     project_area: 'Area',
     stage: 'Stage',
 };
-const progressColors = ['#c47878', '#e09874', '#d4a24e', '#7cae9a', '#4ead7a'];
 
 // ── Filter management ──
 
