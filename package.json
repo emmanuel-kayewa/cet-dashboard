@@ -28,6 +28,7 @@
         "file-saver": "^2.0",
         "highcharts": "^12.5.0",
         "highcharts-vue": "^2.0.1",
-        "pinia": "^2.2"
+        "pinia": "^2.2",
+        "xlsx": "^0.18.5"
     }
 }
