@@ -83,46 +83,54 @@
         </div>
 
         <!-- Charts Row 1 -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <Card title="Revenue by Directorate">
-                <BarChart
-                    :data="directorateRevenue"
-                    xField="code"
-                    yField="revenue"
-                    seriesName="Revenue (ZMW)"
-                    :colors="['#1e40af', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe']"
-                />
-            </Card>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <ChartCard title="Revenue by Directorate" :baseHeight="320">
+                <template #default="{ zoomedHeight }">
+                    <BarChart
+                        :data="directorateRevenue"
+                        xField="code"
+                        yField="revenue"
+                        seriesName="Revenue (ZMW)"
+                        :height="zoomedHeight"
+                    />
+                </template>
+            </ChartCard>
 
-            <Card title="Budget Utilization">
-                <PieChart
-                    :data="budgetPieData"
-                    height="320px"
-                />
-            </Card>
+            <ChartCard title="Budget Utilization" :baseHeight="320">
+                <template #default="{ zoomedHeight }">
+                    <PieChart
+                        :data="budgetPieData"
+                        :height="zoomedHeight"
+                    />
+                </template>
+            </ChartCard>
         </div>
 
         <!-- Charts Row 2 -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            <Card title="Uptime">
-                <GaugeChart
-                    :value="summary.avg_uptime || 0"
-                    :min="90"
-                    :max="100"
-                    title="Avg Uptime"
-                    unit="%"
-                    height="200px"
-                />
-            </Card>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <ChartCard title="Uptime" :baseHeight="200">
+                <template #default="{ zoomedHeight }">
+                    <GaugeChart
+                        :value="summary.avg_uptime || 0"
+                        :min="90"
+                        :max="100"
+                        title="Avg Uptime"
+                        unit="%"
+                        :height="zoomedHeight"
+                    />
+                </template>
+            </ChartCard>
 
-            <Card title="Risk Distribution" class="lg:col-span-2">
-                <HeatmapChart
-                    :data="riskHeatmapData"
-                    :xLabels="directorateLabels"
-                    :yLabels="['Low', 'Medium', 'High', 'Critical']"
-                    height="200px"
-                />
-            </Card>
+            <ChartCard title="Risk Distribution" class="md:col-span-2" :baseHeight="200">
+                <template #default="{ zoomedHeight }">
+                    <HeatmapChart
+                        :data="riskHeatmapData"
+                        :xLabels="directorateLabels"
+                        :yLabels="['Low', 'Medium', 'High', 'Critical']"
+                        :height="zoomedHeight"
+                    />
+                </template>
+            </ChartCard>
         </div>
 
         <!-- Directorates Grid -->
@@ -172,6 +180,7 @@ import { Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Components/Layout/AppLayout.vue';
 import KpiCard from '@/Components/Dashboard/KpiCard.vue';
 import Card from '@/Components/UI/Card.vue';
+import ChartCard from '@/Components/UI/ChartCard.vue';
 import DateRangePicker from '@/Components/UI/DateRangePicker.vue';
 import BarChart from '@/Components/Charts/BarChart.vue';
 import PieChart from '@/Components/Charts/PieChart.vue';
@@ -200,7 +209,6 @@ const budgetPieData = computed(() => {
     return (props.summary.directorates || []).slice(0, 6).map(d => ({
         name: d.code,
         value: d.budget,
-        color: d.color,
     }));
 });
 
