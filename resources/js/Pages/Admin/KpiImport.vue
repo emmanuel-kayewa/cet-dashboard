@@ -46,9 +46,9 @@
                 </div>
 
                 <div class="flex justify-end">
-                    <button @click="parseFile" :disabled="!selectedFile || parsing" class="btn-primary text-sm disabled:opacity-50">
+                    <Button @click="parseFile" :disabled="!selectedFile || parsing" :loading="parsing" variant="primary" size="sm">
                         {{ parsing ? 'Parsing...' : 'Parse & Preview' }}
-                    </button>
+                    </Button>
                 </div>
 
                 <div v-if="parseError" class="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
@@ -75,15 +75,15 @@
                         </div>
                     </div>
                     <div class="flex justify-between">
-                        <button @click="step = 'upload'" class="btn-secondary text-sm">← Back</button>
+                        <Button @click="step = 'upload'" variant="secondary" size="sm">← Back</Button>
                         <div class="flex gap-2">
-                            <button @click="aiEnrich" :disabled="enriching || !previewKpis.length" class="btn-secondary text-sm flex items-center gap-1.5 disabled:opacity-50">
+                            <Button @click="aiEnrich" :disabled="enriching || !previewKpis.length" :loading="enriching" variant="secondary" size="sm">
                                 <svg :class="['w-4 h-4', enriching && 'animate-spin']" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456Z" />
                                 </svg>
                                 {{ enriching ? 'AI Analyzing...' : 'AI Auto-Categorize' }}
-                            </button>
-                            <button @click="step = 'confirm'" class="btn-primary text-sm">Review & Import →</button>
+                            </Button>
+                            <Button @click="step = 'confirm'" variant="primary" size="sm">Review & Import →</Button>
                         </div>
                     </div>
                 </div>
@@ -126,7 +126,7 @@
                                 <option v-for="d in directorates" :key="d.id" :value="d.id">{{ d.name }}</option>
                             </select>
                         </div>
-                        <button @click="applyGlobalDirectorates" class="btn-secondary text-xs mb-1">Apply to All</button>
+                        <Button @click="applyGlobalDirectorates" variant="secondary" size="xs">Apply to All</Button>
                     </div>
 
                     <!-- Editable KPI Table -->
@@ -186,12 +186,12 @@
                     </div>
 
                     <div class="flex justify-between items-center">
-                        <button @click="step = 'preview'" class="btn-secondary text-sm">← Back</button>
+                        <Button @click="step = 'preview'" variant="secondary" size="sm">← Back</Button>
                         <div class="flex items-center gap-4">
                             <span class="text-xs text-gray-400">{{ selectedCount }} of {{ importKpis.length }} selected</span>
-                            <button @click="confirmImport" :disabled="importing || !selectedCount" class="btn-primary text-sm disabled:opacity-50">
+                            <Button @click="confirmImport" :disabled="importing || !selectedCount" :loading="importing" variant="primary" size="sm">
                                 {{ importing ? 'Importing...' : `Import ${selectedCount} KPIs` }}
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </div>
@@ -217,7 +217,7 @@
                 </div>
                 <div class="pt-4 flex justify-center gap-3">
                     <Link href="/admin" class="btn-secondary text-sm">Back to Admin</Link>
-                    <button @click="reset" class="btn-primary text-sm">Import More</button>
+                    <Button @click="reset" variant="primary" size="sm">Import More</Button>
                 </div>
             </div>
         </Card>
@@ -230,6 +230,7 @@ import { Link } from '@inertiajs/vue3';
 import AppLayout from '@/Components/Layout/AppLayout.vue';
 import Breadcrumb from '@/Components/UI/Breadcrumb.vue';
 import Card from '@/Components/UI/Card.vue';
+import Button from '@/Components/UI/Button.vue';
 
 const props = defineProps({
     directorates: { type: Array, default: () => [] },
