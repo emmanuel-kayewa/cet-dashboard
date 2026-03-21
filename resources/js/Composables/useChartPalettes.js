@@ -79,7 +79,8 @@ function monochromeTwoTone(baseHex) {
     ];
 }
 
-const PALETTES = {
+// Exported so PalettePicker can iterate palettes and render swatch previews.
+export const PALETTES = {
     current: {
         label: 'Current (multi-color)',
         categorical: CATEGORICAL,
@@ -126,20 +127,39 @@ function buildDerivedPalette(baseHex) {
 // Singleton reactive state (shared across all imports)
 const paletteKey = ref('current');
 
-// Initialize once from localStorage
+// Initialize from server-side user preference first, then fall back to localStorage
 try {
+    const serverPref =
+        typeof window !== 'undefined'
+            ? window.__inertia_initial_page?.props?.auth?.user?.preferences?.chart_palette
+            : null;
     const stored = typeof window !== 'undefined' ? window.localStorage?.getItem(STORAGE_KEY) : null;
-    if (stored && stored in PALETTES) paletteKey.value = stored;
+    const initial = serverPref || stored;
+    if (initial && initial in PALETTES) paletteKey.value = initial;
 } catch {
     // ignore storage access failures
 }
 
 watch(paletteKey, (val) => {
+    // Dual-write: localStorage for instant reload + server for cross-device persistence
     try {
         window.localStorage?.setItem(STORAGE_KEY, val);
     } catch {
         // ignore
     }
+    // Persist to server (fire-and-forget, plain fetch to avoid Inertia page visit)
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    fetch('/user/preferences', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
+        },
+        body: JSON.stringify({ key: 'chart_palette', value: val }),
+    }).catch(() => {});
+    // Helps ECharts/Highcharts recompute layout when palette changes.
+    window.dispatchEvent(new Event('resize'));
 });
 
 const paletteOptions = Object.entries(PALETTES).map(([value, p]) => ({
@@ -169,6 +189,20 @@ function pickCategorical(n) {
     return Array.from({ length: n }, (_, i) => list[i % list.length]);
 }
 
+/**
+ * Return the first `count` categorical colours for a given palette key.
+ * Used by PalettePicker to render swatch previews without activating the palette.
+ */
+function previewColors(key, count = 6) {
+    const p = PALETTES[key];
+    if (!p) return [];
+    const cats = p.categorical || buildDerivedPalette(p.base).categorical;
+    return cats.slice(0, count);
+}
+
+// TODO: Future — expose CSS custom properties (--palette-primary, --palette-accent, etc.)
+// for UI element theming beyond charts (badges, buttons, active tabs, sidebar highlights).
+
 export function useChartPalettes() {
     return {
         paletteKey,
@@ -178,5 +212,6 @@ export function useChartPalettes() {
         sequential,
         twoTone,
         pickCategorical,
+        previewColors,
     };
 }
