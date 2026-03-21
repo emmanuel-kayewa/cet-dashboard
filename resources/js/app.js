@@ -4,7 +4,7 @@ import { createPinia } from 'pinia';
 import '../css/app.css';
 
 createInertiaApp({
-    title: (title) => `${title} - ZESCO Executive Dashboard`,
+    title: (title) => title ? `${title} - ZESCO Executive Dashboard` : 'ZESCO Executive Dashboard',
     resolve: (name) => {
         const pages = import.meta.glob('./Pages/**/*.vue');
         return pages[`./Pages/${name}.vue`]();
