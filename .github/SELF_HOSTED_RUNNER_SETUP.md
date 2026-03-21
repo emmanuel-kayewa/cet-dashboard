@@ -104,9 +104,11 @@ chmod -R 775 /var/www/zesco-dashboard-test/storage
 chmod -R 775 /var/www/zesco-dashboard-test/bootstrap/cache
 chmod -R 775 /var/www/zesco-dashboard-test/public
 
-# Make new files inherit group ownership
+# Make new files inherit group ownership (critical for shared access)
 chmod g+s /var/www/zesco-dashboard-test/storage
 chmod g+s /var/www/zesco-dashboard-test/bootstrap/cache
+find /var/www/zesco-dashboard-test/storage -type d -exec chmod g+s {} +
+find /var/www/zesco-dashboard-test/bootstrap/cache -type d -exec chmod g+s {} +
 
 # Add github-runner to PHP-FPM user's group
 usermod -aG apache github-runner
@@ -558,6 +560,66 @@ systemctl restart php-fpm
 
 **Prevention:** Follow Step 2 & 3 in "Part 1: Prepare the Server" to identify the PHP-FPM user and set correct permissions from the start.
 
+### Issue 10: Deployment Fails - "Failed to clear cache" During GitHub Actions
+
+**Problem:** Deployment workflow fails during cache clearing step:
+```
+🧹 Clearing caches...
+   INFO  Configuration cache cleared successfully.  
+   ERROR  Failed to clear cache. Make sure you have the appropriate permissions.  
+Error: Process completed with exit code 1.
+```
+
+**Cause:** PHP-FPM (running as `apache`) creates cache files owned by `apache:apache`. The `github-runner` user can't delete these files even with group permissions because they're owned by a different user.
+
+**Solution 1: Fix Permissions on Server (Recommended)**
+```bash
+# As root
+cd /var/www/cet-dashboard
+
+# 1. Ensure proper ownership
+chown -R github-runner:apache storage/framework/cache
+chown -R github-runner:apache storage/framework/views
+chown -R github-runner:apache storage/framework/sessions
+
+# 2. Set group sticky bit so new files inherit the group
+chmod g+s storage/framework/cache
+chmod g+s storage/framework/views
+chmod g+s storage/framework/sessions
+find storage/framework/cache -type d -exec chmod g+s {} +
+find storage/framework/views -type d -exec chmod g+s {} +
+find storage/framework/sessions -type d -exec chmod g+s {} +
+
+# 3. Set proper permissions (775 for directories, 664 for files)
+find storage/framework/cache -type d -exec chmod 775 {} +
+find storage/framework/cache -type f -exec chmod 664 {} +
+find storage/framework/views -type d -exec chmod 775 {} +
+find storage/framework/views -type f -exec chmod 664 {} +
+find storage/framework/sessions -type d -exec chmod 775 {} +
+find storage/framework/sessions -type f -exec chmod 664 {} +
+
+# 4. Restart PHP-FPM
+systemctl restart php-fpm
+```
+
+**Solution 2: Update Workflow to Handle Gracefully (Already Applied)**
+
+The workflow files have been updated to continue on cache clear failures and fall back to manual deletion:
+```yaml
+# Clear cache with fallback to manual deletion
+php artisan cache:clear || {
+  echo "⚠️  Cache clear failed, manually removing cache files..."
+  find storage/framework/cache/data -type f -delete 2>/dev/null || true
+}
+```
+
+This allows deployment to complete even if cache clearing fails.
+
+**Prevention:** 
+- Apply proper permissions during initial setup (Step 3 in "Part 1: Prepare the Server")
+- Ensure `chmod g+s` is set on cache directories so new files inherit group ownership
+- Verify PHP-FPM is configured to respect group permissions
+
 ## Service Management Commands
 
 ### As Root:
@@ -710,6 +772,8 @@ When deployment fails, check:
 - [ ] github-runner user has write permissions to app directory
 - [ ] **PHP-FPM user has write access to storage/ and bootstrap/cache/**: `ls -la storage/` (should show `github-runner:apache` or similar)
 - [ ] **Correct group ownership**: `ps aux | grep php-fpm` and match the group in `ls -la storage/`
+- [ ] **Group sticky bit set on cache directories**: `ls -ld storage/framework/cache` (should show `drwxrwsr-x` - note the 's')
+- [ ] **Cache files are group writable**: `ls -la storage/framework/cache/data/` (files should be `664` or `rw-rw-r--`)
 - [ ] Git can pull from repository (SSH keys configured)
 - [ ] Composer is installed and in PATH
 - [ ] NPM is installed and in PATH
