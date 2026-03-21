@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('avatar')->nullable();
             $table->string('job_title')->nullable();
             $table->string('department')->nullable();
-            $table->foreignId('role_id')->constrained()->onDelete('restrict');
+            $table->foreignId('role_id')->constrained();
             $table->foreignId('directorate_id')->nullable()->constrained()->onDelete('set null');
             $table->string('magic_link_token')->nullable();
             $table->timestamp('magic_link_expires_at')->nullable();
