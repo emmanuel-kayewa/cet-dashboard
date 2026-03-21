@@ -204,16 +204,8 @@
                         :label="app?.data_source === 'simulation' ? 'Simulation' : app?.data_source === 'manual' ? 'Manual' : 'Live'" 
                     /> -->
 
-                    <!-- Chart Palette Selector -->
-                    <div class="flex items-center gap-2">
-                        <span class="hidden md:inline text-xs text-gray-500 dark:text-gray-400">Chart palette:</span>
-                        <Select
-                            v-model="paletteKey"
-                            :options="paletteOptions"
-                            size="sm"
-                            class="w-40 sm:w-52"
-                        />
-                    </div>
+                    <!-- Chart Palette Picker -->
+                    <PalettePicker />
 
                     <!-- Dark Mode Toggle -->
                     <button @click="toggleDark" class="p-2 rounded-lg text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition" title="Toggle dark mode">
@@ -389,10 +381,9 @@ import SidebarLink from './SidebarLink.vue';
 import SidebarGroup from './SidebarGroup.vue';
 import DirectorateSidebar from './DirectorateSidebar.vue';
 import Badge from '@/Components/UI/Badge.vue';
-import Select from '@/Components/UI/Select.vue';
+import PalettePicker from '@/Components/UI/PalettePicker.vue';
 import { useBadges } from '@/Composables/useBadges';
 import AiDrawer from '@/Components/AI/AiDrawer.vue';
-import { useChartPalettes } from '@/Composables/useChartPalettes';
 import { useDirectorateStore } from '@/stores/useDirectorateStore';
 
 defineProps({
@@ -425,12 +416,6 @@ const sortedDirectorates = computed(() => {
 const sidebarOpen = ref(true);
 const mobileOpen = ref(false);
 const { isDark, toggle: toggleDark } = useDarkMode();
-const { paletteKey, paletteOptions } = useChartPalettes();
-
-watch(paletteKey, () => {
-    // Helps ECharts/Highcharts recompute layout when palette changes.
-    window.dispatchEvent(new Event('resize'));
-});
 
 // ── Directorate sidebar ──────────────────────────────────
 function enterDirectorateView(directorate, href) {
