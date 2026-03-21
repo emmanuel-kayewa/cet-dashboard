@@ -30,10 +30,20 @@ jobs:
             php artisan migrate --force
             
             echo "🧹 Clearing caches..."
-            php artisan config:clear
-            php artisan cache:clear
-            php artisan route:clear
-            php artisan view:clear
+            php artisan config:clear || true
+            php artisan route:clear || true
+            
+            # Clear cache with fallback to manual deletion
+            php artisan cache:clear || {
+              echo "⚠️  Cache clear failed, manually removing cache files..."
+              find storage/framework/cache/data -type f -delete 2>/dev/null || true
+            }
+            
+            # Clear view cache with fallback
+            php artisan view:clear || {
+              echo "⚠️  View clear failed, manually removing view files..."
+              find storage/framework/views -type f -name "*.php" -delete 2>/dev/null || true
+            }
             
             echo "💾 Caching configuration..."
             php artisan config:cache
