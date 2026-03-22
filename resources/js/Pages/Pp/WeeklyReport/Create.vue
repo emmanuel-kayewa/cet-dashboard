@@ -180,7 +180,7 @@
                             <textarea
                                 v-model="form.notes"
                                 rows="4"
-                                class="block w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 rounded-lg focus:ring-zesco-500 focus:border-zesco-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white p-3"
+                                class="block w-full text-sm text-gray-900 bg-gray-50 border border-gray-300 rounded-lg focus:ring-[var(--palette-accent)] focus:border-[var(--palette-accent)] dark:bg-gray-700 dark:border-gray-600 dark:text-white p-3"
                                 placeholder="Additional notes, phased completion dates, or any other relevant information..."
                             ></textarea>
                             <p v-if="form.errors.notes" class="text-red-500 text-xs mt-1">{{ form.errors.notes }}</p>
