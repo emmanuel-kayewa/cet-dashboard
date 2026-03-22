@@ -41,7 +41,7 @@
                 </div>
 
                 <!-- Azure AD Button -->
-                <a
+                <!-- <a
                     href="/auth/azure/redirect"
                     class="flex items-center justify-center gap-3 w-full py-3 px-4 bg-black hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-200 text-white dark:text-black rounded-lg font-medium transition-colors duration-200 shadow-sm"
                 >
@@ -52,17 +52,17 @@
                         <rect x="11" y="11" width="9" height="9" />
                     </svg>
                     Sign in with Microsoft
-                </a>
+                </a> -->
 
                 <!-- Divider -->
-                <div class="relative my-7">
+                <!-- <div class="relative my-7">
                     <div class="absolute inset-0 flex items-center">
                         <div class="w-full border-t border-gray-200 dark:border-gray-800"></div>
                     </div>
                     <div class="relative flex justify-center">
                         <span class="px-3 text-xs text-gray-400 dark:text-gray-600 bg-white dark:bg-gray-950">or use magic link</span>
                     </div>
-                </div>
+                </div> -->
 
                 <!-- Magic Link Form -->
                 <form @submit.prevent="sendMagicLink">
