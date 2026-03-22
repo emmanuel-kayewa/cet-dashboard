@@ -12,6 +12,10 @@
                     size="md"
                     class="w-28 sm:w-32"
                 />
+                <Button variant="secondary" size="sm" @click="showImport = true">
+                    <svg class="w-4 h-4 mr-1 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                    Import
+                </Button>
                 <Button variant="primary" size="md" @click="openModal()">+ New Record</Button>
             </div>
         </template>
@@ -90,6 +94,9 @@
             </div>
         </form>
     </Modal>
+
+    <!-- Import Modal -->
+    <PpImportModal :show="showImport" entity="financials" @close="showImport = false" @imported="() => { showImport = false; router.reload(); }" />
 </template>
 
 <script setup>
@@ -100,6 +107,7 @@ import Input from '@/Components/UI/Input.vue';
 import Select from '@/Components/UI/Select.vue';
 import Button from '@/Components/UI/Button.vue';
 import Modal from '@/Components/UI/Modal.vue';
+import PpImportModal from '@/Components/PpImportModal.vue';
 
 const props = defineProps({
     financials: { type: Object, default: () => ({ data: [], links: [] }) },
@@ -114,6 +122,7 @@ watch(currencyFilter, () => {
 });
 
 const showModal = ref(false);
+const showImport = ref(false);
 const editingId = ref(null);
 
 const projectOptions = computed(() => [
