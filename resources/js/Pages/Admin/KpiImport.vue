@@ -27,7 +27,7 @@
                 <!-- Drop Zone -->
                 <div @dragover.prevent="dragover = true" @dragleave="dragover = false" @drop.prevent="handleDrop"
                      :class="['border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer',
-                        dragover ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-gray-600 hover:border-gray-400']"
+                        dragover ? 'border-[var(--palette-accent)] bg-[var(--palette-accent-lighter)]/20 dark:bg-[var(--palette-accent-dark)]/20' : 'border-gray-300 dark:border-gray-600 hover:border-gray-400']"
                      @click="$refs.fileInput.click()">
                     <svg class="w-10 h-10 mx-auto mb-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
