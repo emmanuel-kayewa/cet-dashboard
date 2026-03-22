@@ -13,14 +13,19 @@
                 <template #left>
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-3 mb-2">
-                            <span :class="ragDot(projectData.project.rag_status)" class="w-4 h-4 rounded-full flex-shrink-0"></span>
+                            <span v-if="projectData.project.status" class="px-2 py-0.5 rounded-full text-xs font-medium" :class="{
+                                'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300': projectData.project.status === 'On Track',
+                                'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300': projectData.project.status === 'Delayed',
+                                'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300': projectData.project.status === 'At Risk',
+                            }">{{ projectData.project.status }}</span>
+                            <span v-else class="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">—</span>
                             <h2 class="text-xl font-bold text-gray-900 dark:text-white truncate">{{ projectData.project.name }}</h2>
                         </div>
                         <div class="flex flex-wrap items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
                             <span class="font-mono text-xs bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">{{ projectData.project.code }}</span>
                             <span>{{ projectData.project.sector }}</span>
                             <span v-if="projectData.project.sub_sector">&middot; {{ projectData.project.sub_sector }}</span>
-                            <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">{{ projectData.project.status }}</span>
+                            <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">{{ projectData.project.project_stage }}</span>
                         </div>
                         <p v-if="projectData.project.key_issue_summary" class="mt-2 text-sm text-amber-600 dark:text-amber-400">
                             <strong>Key Issue:</strong> {{ projectData.project.key_issue_summary }}
