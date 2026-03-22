@@ -48,11 +48,14 @@ class PpProjectController extends Controller
         if ($request->filled('sector')) {
             $query->where('sector', $request->input('sector'));
         }
+        if ($request->filled('project_stage')) {
+            $query->where('project_stage', $request->input('project_stage'));
+        }
         if ($request->filled('status')) {
             $query->where('status', $request->input('status'));
         }
-        if ($request->filled('rag_status')) {
-            $query->where('rag_status', $request->input('rag_status'));
+        if ($request->filled('lifecycle_phase')) {
+            $query->where('lifecycle_phase', $request->input('lifecycle_phase'));
         }
 
         $projects = $query->paginate(30)->withQueryString();
@@ -60,7 +63,7 @@ class PpProjectController extends Controller
         return Inertia::render('Pp/Index', [
             'activeTab' => 'projects',
             'projects'  => $projects,
-            'filters'   => $request->only(['sector', 'status', 'rag_status']),
+            'filters'   => $request->only(['sector', 'project_stage', 'status', 'lifecycle_phase']),
         ]);
     }
 
