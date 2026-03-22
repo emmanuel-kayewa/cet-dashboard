@@ -19,6 +19,7 @@ class PpRiskRequest extends FormRequest
                 'required', 'string', 'max:20',
                 Rule::unique('pp_risks', 'risk_code')->ignore($this->route('risk')),
             ],
+            'record_type'      => 'nullable|string|in:Risk,Issue',
             'pp_project_id'    => 'nullable|exists:pp_projects,id',
             'risk_category'    => 'required|string|max:255',
             'risk_description' => 'required|string|max:5000',
@@ -28,7 +29,9 @@ class PpRiskRequest extends FormRequest
             'mitigation'       => 'nullable|string|max:5000',
             'owner'            => 'nullable|string|max:255',
             'due_date'         => 'nullable|date',
-            'status'           => 'required|string|in:Open,Mitigating,Closed',
+            'status'           => 'required|string|in:Open,Mitigating,Closed,In Progress',
+            'created_date'     => 'nullable|date',
+            'days_open'        => 'nullable|integer|min:0',
             'notes'            => 'nullable|string|max:2000',
         ];
     }

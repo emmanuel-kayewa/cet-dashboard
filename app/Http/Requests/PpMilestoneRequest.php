@@ -21,8 +21,14 @@ class PpMilestoneRequest extends FormRequest
             ],
             'pp_project_id'  => 'required|exists:pp_projects,id',
             'milestone'      => 'required|string|max:255',
+            'category'       => 'nullable|string|in:Contract,Construction,Procurement,Engineering,Commissioning',
+            'baseline_date'  => 'nullable|date',
+            'forecast_date'  => 'nullable|date',
             'actual_date'    => 'nullable|date',
-            'status'         => 'required|string|in:Completed,In Progress,Pending',
+            'weight_pct'     => 'nullable|numeric|min:0|max:100',
+            'delay_days'     => 'nullable|integer',
+            'owner'          => 'nullable|string|max:255',
+            'status'         => 'required|string|in:Completed,In Progress,Pending,Overdue,At Risk,Not Started',
             'notes'          => 'nullable|string|max:2000',
         ];
     }
