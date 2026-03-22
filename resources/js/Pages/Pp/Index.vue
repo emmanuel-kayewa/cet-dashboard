@@ -31,6 +31,7 @@
         <SafeguardsTab     v-else-if="currentTab === 'safeguards'"   :safeguards="safeguards"      :ppProjects="ppProjects" />
         <ProgrammeOutputsTab v-else-if="currentTab === 'programme-outputs'" :programmeOutputs="programmeOutputs" />
         <GridImpactStudiesTab v-else-if="currentTab === 'grid-impact-studies'" :gridImpactStudies="gridImpactStudies" :ppProjects="ppProjects" />
+        <WorkstreamsTab v-else-if="currentTab === 'workstreams'" :workstreams="workstreams" :ppProjects="ppProjects" />
 
         <!-- Default / fallback -->
         <div v-else class="text-center py-12 text-gray-400 text-sm">
@@ -51,6 +52,7 @@ import RisksTab from '@/Pages/Pp/Tabs/RisksTab.vue';
 import SafeguardsTab from '@/Pages/Pp/Tabs/SafeguardsTab.vue';
 import ProgrammeOutputsTab from '@/Pages/Pp/Tabs/ProgrammeOutputsTab.vue';
 import GridImpactStudiesTab from '@/Pages/Pp/Tabs/GridImpactStudiesTab.vue';
+import WorkstreamsTab from '@/Pages/Pp/Tabs/WorkstreamsTab.vue';
 
 const props = defineProps({
     activeTab:        { type: String, default: 'projects' },
@@ -70,6 +72,8 @@ const props = defineProps({
     programmeOutputs: { type: Object, default: () => ({ data: [], links: [] }) },
     // Grid Impact Studies tab
     gridImpactStudies: { type: Object, default: () => ({ data: [], links: [] }) },
+    // Workstreams tab
+    workstreams:      { type: Object, default: () => ({ data: [], links: [] }) },
 });
 
 const currentTab = computed(() => props.activeTab);
@@ -82,6 +86,7 @@ const tabs = [
     { key: 'safeguards',        label: 'Safeguards',        href: '/pp/safeguards' },
     { key: 'programme-outputs', label: 'Programme Outputs', href: '/pp/programme-outputs' },
     { key: 'grid-impact-studies', label: 'Grid Studies', href: '/pp/grid-impact-studies' },
+    { key: 'workstreams',         label: 'Workstreams',    href: '/pp/workstreams' },
 ];
 
 const breadcrumbItems = computed(() => [
