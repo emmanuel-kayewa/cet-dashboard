@@ -200,8 +200,28 @@ function previewColors(key, count = 6) {
     return cats.slice(0, count);
 }
 
-// TODO: Future — expose CSS custom properties (--palette-primary, --palette-accent, etc.)
-// for UI element theming beyond charts (badges, buttons, active tabs, sidebar highlights).
+// TODO: Future — expand CSS custom properties for full UI theming
+// (badges, buttons, active tabs, sidebar highlights).
+
+/**
+ * Inject CSS custom properties derived from the active palette's primary colour
+ * so UI elements (hover borders, focus rings) can react to palette changes.
+ */
+function applyAccentProperties() {
+    if (typeof document === 'undefined') return;
+    const p = PALETTES[paletteKey.value] || PALETTES.current;
+    // Use the palette's base colour, or the first categorical colour for multi-colour palettes
+    const base = p.base || (p.categorical?.[0]) || CATEGORICAL[0];
+    const style = document.documentElement.style;
+    style.setProperty('--palette-accent',       base);
+    style.setProperty('--palette-accent-light',  mixHex(base, '#ffffff', 0.65));
+    style.setProperty('--palette-accent-lighter', mixHex(base, '#ffffff', 0.82));
+    style.setProperty('--palette-accent-dark',   mixHex(base, '#000000', 0.25));
+}
+
+// Apply on init + whenever palette changes
+applyAccentProperties();
+watch(paletteKey, applyAccentProperties);
 
 export function useChartPalettes() {
     return {
