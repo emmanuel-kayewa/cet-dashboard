@@ -16,24 +16,25 @@ class PpDashboardService
      * All dimension keys that can be used as filters / breakdowns.
      */
     public const DIMENSIONS = [
-        'sector', 'sub_sector', 'status', 'rag_status', 'province',
-        'district', 'programme', 'funder', 'contractor', 'developer',
+        'sector', 'sub_sector', 'project_stage', 'status', 'lifecycle_phase', 'province',
+        'district', 'programme', 'energy_type', 'contractor', 'developer',
     ];
 
     /**
      * Human labels for each dimension.
      */
     public const DIMENSION_LABELS = [
-        'sector'     => 'Sector',
-        'sub_sector' => 'Project Type',
-        'status'     => 'Status',
-        'rag_status' => 'RAG',
-        'province'   => 'Province',
-        'district'   => 'District',
-        'programme'  => 'Programme',
-        'funder'     => 'Funder',
-        'contractor' => 'Contractor',
-        'developer'  => 'Developer',
+        'sector'          => 'Sector',
+        'sub_sector'      => 'Project Type',
+        'project_stage'   => 'Project Stage',
+        'status'          => 'Health Status',
+        'lifecycle_phase'  => 'Lifecycle Phase',
+        'province'        => 'Province',
+        'district'        => 'District',
+        'programme'       => 'Programme',
+        'energy_type'     => 'Energy Type',
+        'contractor'      => 'Contractor',
+        'developer'       => 'Developer',
     ];
 
     // ─── Level 1: Portfolio Overview ──────────────────────────────
@@ -51,7 +52,7 @@ class PpDashboardService
             'sectorBreakdown'   => $this->groupByDimension($allProjects, 'sector'),
             'subSectorBreakdown' => $this->groupByDimension($allProjects, 'sub_sector'),
             'statusBreakdown'   => $this->groupByDimension($allProjects, 'status'),
-            'ragBreakdown'      => $this->groupByDimension($allProjects, 'rag_status'),
+            'ragBreakdown'      => $this->groupByDimension($allProjects, 'lifecycle_phase'),
             'provinceBreakdown' => $this->groupByDimension($allProjects, 'province'),
             'programmeBreakdown' => $this->groupByDimension($allProjects, 'programme'),
             'sectorInvestment'  => $this->buildSectorInvestment($allProjects),
@@ -256,8 +257,8 @@ class PpDashboardService
                 'district'         => $project->district,
                 'contractor'       => $project->contractor,
                 'developer'        => $project->developer,
-                'funder'           => $project->funder,
-                'funding_type'     => $project->funding_type,
+                'funder'           => $project->owner_entity,
+                'funding_type'     => $project->ownership_model,
                 'cost_usd'         => $project->cost_usd,
                 'cost_zmw'         => $project->cost_zmw,
                 'capacity_mw'      => $project->capacity_mw,
@@ -265,7 +266,7 @@ class PpDashboardService
                 'cod_planned'      => $project->cod_planned?->format('Y-m-d'),
                 'key_issue_summary' => $project->key_issue_summary,
                 'last_update_date' => $project->last_update_date?->format('Y-m-d'),
-                'rag_status'       => $project->rag_status,
+                'rag_status'       => $project->lifecycle_phase,
                 'notes'            => $project->notes,
             ],
             'milestones'       => $milestones,
@@ -337,19 +338,38 @@ class PpDashboardService
     {
         $colors = ['#6889c4', '#5ba5b5', '#7cae9a', '#d4a24e', '#c47878', '#9b8ec4', '#e09874', '#6aaeae', '#b5a276', '#8fafd0'];
 
-        // RAG gets special colors
-        $ragColors = [
-            'Green' => '#4ead7a',
-            'Amber' => '#d4a24e',
-            'Red'   => '#cf6060',
+        // Lifecycle phase gets special colors
+        $phaseColors = [
+            'Implementation'            => '#6889c4',
+            'Commissioning/Operational' => '#4ead7a',
+            'Procurement'               => '#d4a24e',
+            'Contracting'               => '#9b8ec4',
         ];
 
-        return $projects->groupBy($dimension)->map(function ($group, $key) use ($dimension, $colors, $ragColors) {
+        // Project stage colors
+        $stageColors = [
+            'Execution'     => '#6889c4',
+            'Preparation'   => '#d4a24e',
+            'Commissioned'  => '#4ead7a',
+            'Completed'     => '#4ead7a',
+            'Cancelled'     => '#a3adb8',
+        ];
+
+        // Health status colors
+        $healthColors = [
+            'On Track' => '#4ead7a',
+            'Delayed'  => '#d4a24e',
+            'At Risk'  => '#cf6060',
+        ];
+
+        return $projects->groupBy($dimension)->map(function ($group, $key) use ($dimension, $colors, $phaseColors, $stageColors, $healthColors) {
             static $idx = 0;
             $name = $key ?: 'Unknown';
             $color = match ($dimension) {
-                'rag_status' => $ragColors[$name] ?? '#94a3b8',
-                default      => $colors[$idx++ % count($colors)],
+                'lifecycle_phase' => $phaseColors[$name] ?? '#94a3b8',
+                'project_stage'   => $stageColors[$name] ?? '#94a3b8',
+                'status'          => $healthColors[$name] ?? '#94a3b8',
+                default           => $colors[$idx++ % count($colors)],
             };
 
             return [
@@ -419,10 +439,10 @@ class PpDashboardService
                 'spendPct'     => $spendPct,
                 'avgProgress'  => round($group->avg('progress_pct'), 1),
                 'totalMw'      => $totalMw,
-                'ragCounts'    => [
-                    'Green' => $group->where('rag_status', 'Green')->count(),
-                    'Amber' => $group->where('rag_status', 'Amber')->count(),
-                    'Red'   => $group->where('rag_status', 'Red')->count(),
+                'statusCounts'  => [
+                    'On Track' => $group->where('status', 'On Track')->count(),
+                    'Delayed'  => $group->where('status', 'Delayed')->count(),
+                    'At Risk'  => $group->where('status', 'At Risk')->count(),
                 ],
             ];
         })->values()->toArray();
@@ -434,15 +454,14 @@ class PpDashboardService
     private function buildRecentIssues(Collection $projects): array
     {
         return $projects
-            ->filter(fn ($p) => $p->rag_status === 'Red' || !empty($p->key_issue_summary))
-            ->sortByDesc(fn ($p) => $p->rag_status === 'Red' ? 1 : 0)
+            ->filter(fn ($p) => !empty($p->key_issue_summary))
             ->take(5)
             ->map(fn ($p) => [
                 'id'        => $p->id,
                 'code'      => $p->project_code,
                 'name'      => $p->project_name,
                 'sector'    => $p->sector,
-                'rag'       => $p->rag_status,
+                'phase'     => $p->lifecycle_phase,
                 'status'    => $p->status,
                 'key_issue' => $p->key_issue_summary,
                 'progress_pct' => $p->progress_pct,
@@ -485,11 +504,11 @@ class PpDashboardService
             'province'     => $p->province,
             'district'     => $p->district,
             'contractor'   => $p->contractor,
-            'funder'       => $p->funder,
+            'funder'       => $p->owner_entity,
             'capacity_mw'  => $p->capacity_mw,
             'cost_usd'     => $p->cost_usd,
             'progress_pct' => $p->progress_pct,
-            'rag'          => $p->rag_status,
+            'rag'          => $p->lifecycle_phase,
             'key_issue'    => $p->key_issue_summary,
             'cod_planned'  => $p->cod_planned?->format('Y-m-d'),
         ])->values()->toArray();
